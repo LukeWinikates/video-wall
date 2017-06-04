@@ -3,8 +3,9 @@ module App exposing (..)
 import Html exposing (Html, div, video)
 import Html.Attributes exposing (autoplay, height, loop, src, style)
 import Html.Events exposing (..)
-import List exposing (head, map, tail, take)
-import List.Extra exposing (zip)
+import List exposing (foldl, head, map, tail, take)
+import List.Extra exposing (zip, last)
+import Tuple exposing (second)
 
 
 type Orientation
@@ -65,13 +66,85 @@ type alias Frame =
     { orientation : Orientation, scale : Scale }
 
 
+gridSize : Frame -> ( Int, Int )
+gridSize { orientation, scale } =
+    case orientation of
+        Vertical ->
+            case scale of
+                Small ->
+                    ( 3, 1 )
 
--- size Vertical Small = 1,2
--- size Vertical Medium = 2,4
--- size Vertical Large = 4,8
--- size Horizontal Small = 2,1
--- size Horizontal Medium = 4,2
--- size Horizontal Large = 8,4
+                Medium ->
+                    ( 5, 2 )
+
+                Large ->
+                    ( 7, 3 )
+
+        Horizontal ->
+            case scale of
+                Small ->
+                    ( 1, 3 )
+
+                Medium ->
+                    ( 2, 5 )
+
+                Large ->
+                    ( 3, 7 )
+
+
+type alias Position =
+    { rows : ( Int, Int ), columns : ( Int, Int ) }
+
+
+type Grid
+    = Grid ( Int, Int, List ( Frame, Position ) )
+
+
+grid =
+    Grid ( 5, 7, [] )
+
+
+bottomRightEdge : Position -> ( Int, Int )
+bottomRightEdge { columns, rows } =
+    let
+        ( _, farColumn ) =
+            columns
+
+        ( _, farRow ) =
+            rows
+    in
+        ( farColumn, farRow )
+
+
+posForNext : Grid -> Frame -> Position
+posForNext (Grid ( cols, rows, items )) frame =
+    let
+        ( x, y ) =
+            Maybe.map second (last items)
+                |> -- Maybe item == Maybe {
+                   \m ->
+                    Maybe.map bottomRightEdge m
+                        |> \m -> Maybe.withDefault ( 0, 0 ) m
+
+        ( xNeeded, yNeeded ) =
+            gridSize frame
+    in
+        if y + yNeeded > rows then
+            { rows = ( 0, yNeeded ), columns = ( x + 1, x + 1 + xNeeded ) }
+        else
+            { rows = ( y + 1, y + 1 + yNeeded ), columns = ( x, x + xNeeded ) }
+
+
+gridAppend : Frame -> Grid -> Grid
+gridAppend frame (Grid ( cols, rows, items )) =
+    let
+        newPos =
+            posForNext grid frame
+
+        newItems =
+            ( frame, newPos ) :: items
+    in
+        Grid ( cols, rows, newItems )
 
 
 main : Program Never Model Msg
@@ -123,22 +196,41 @@ w f =
             "30%"
 
 
-movieView : ( Movie, Frame ) -> Html Msg
-movieView ( movie, frame ) =
-    video
-        [ (loop True)
-        , (style
-            [ ( "width", w frame )
+movieView : ( Movie, ( Frame, Position ) ) -> Html Msg
+movieView ( movie, ( frame, position ) ) =
+    let
+        ( col1, col2 ) =
+            position.columns
+
+        ( row1, row2 ) =
+            position.rows
+    in
+        video
+            [ (loop True)
+            , (style
+                [ ( "grid-row", (toString row1) ++ "/" ++ (toString row2) )
+                , ( "grid-column", (toString col1) ++ "/" ++ (toString col2) )
+                ]
+              )
+            , (src ("/public/" ++ movie.fileName))
+            , (autoplay True)
             ]
-          )
-        , (src ("/public/" ++ movie.fileName))
-        , (autoplay True)
-        ]
-        []
+            []
 
 
 view : Model -> Html Msg
 view model =
-    div
-        []
-        (map movieView (zip model.layout.movies model.layout.frames))
+    let
+        (Grid ( _, _, items )) =
+            (foldl gridAppend grid model.layout.frames)
+    in
+        div
+            [ (style
+                [ ( "display", "grid" )
+                , ( "grid-gap", "10px" )
+                , ( "max-width", "90vw" )
+                , ( "grid-auto-rows", "minmax(100px, auto)" )
+                ]
+              )
+            ]
+            (map movieView (zip model.layout.movies items))
