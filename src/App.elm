@@ -72,17 +72,6 @@ gridSize { orientation, scale } =
         Vertical ->
             case scale of
                 Small ->
-                    ( 3, 1 )
-
-                Medium ->
-                    ( 5, 2 )
-
-                Large ->
-                    ( 7, 3 )
-
-        Horizontal ->
-            case scale of
-                Small ->
                     ( 1, 3 )
 
                 Medium ->
@@ -90,6 +79,17 @@ gridSize { orientation, scale } =
 
                 Large ->
                     ( 3, 7 )
+
+        Horizontal ->
+            case scale of
+                Small ->
+                    ( 3, 1 )
+
+                Medium ->
+                    ( 5, 2 )
+
+                Large ->
+                    ( 7, 3 )
 
 
 type alias Position =
@@ -100,51 +100,30 @@ type Grid
     = Grid ( Int, Int, List ( Frame, Position ) )
 
 
-grid =
-    Grid ( 5, 7, [] )
-
-
-bottomRightEdge : Position -> ( Int, Int )
-bottomRightEdge { columns, rows } =
-    let
-        ( _, farColumn ) =
-            columns
-
-        ( _, farRow ) =
-            rows
-    in
-        ( farColumn, farRow )
-
-
 posForNext : Grid -> Frame -> Position
-posForNext (Grid ( cols, rows, items )) frame =
+posForNext (Grid ( gridWidth, gridHeight, items )) frame =
     let
-        ( x, y ) =
-            Maybe.map second (last items)
-                |> -- Maybe item == Maybe {
-                   \m ->
-                    Maybe.map bottomRightEdge m
-                        |> \m -> Maybe.withDefault ( 0, 0 ) m
-
-        ( xNeeded, yNeeded ) =
+        ( widthNeeded, heightNeeded ) =
             gridSize frame
     in
-        if y + yNeeded > rows then
-            { rows = ( 0, yNeeded ), columns = ( x + 1, x + 1 + xNeeded ) }
-        else
-            { rows = ( y + 1, y + 1 + yNeeded ), columns = ( x, x + xNeeded ) }
+        case last items |> Debug.log "last items" of
+            Nothing ->
+                { rows = ( 1, 1 + heightNeeded ), columns = ( 1, 1 + widthNeeded ) }
+
+            Just ( _, lastItem ) ->
+                if (lastItem.rows |> second) + heightNeeded > gridHeight then
+                    Debug.log "new column" <| { rows = ( 1, 1 + heightNeeded ), columns = ( lastItem.columns |> second, (lastItem.columns |> second) + widthNeeded ) }
+                else
+                    Debug.log "same column" <| { rows = ( lastItem.rows |> second, (lastItem.rows |> second) + heightNeeded ), columns = lastItem.columns }
 
 
 gridAppend : Frame -> Grid -> Grid
-gridAppend frame (Grid ( cols, rows, items )) =
+gridAppend frame g =
     let
-        newPos =
-            posForNext grid frame
-
-        newItems =
-            ( frame, newPos ) :: items
+        (Grid ( cols, rows, items )) =
+            g
     in
-        Grid ( cols, rows, newItems )
+        Grid ( cols, rows, List.append items [ ( frame, posForNext g frame ) ] )
 
 
 main : Program Never Model Msg
@@ -186,16 +165,6 @@ update action model =
     ( model, Cmd.none )
 
 
-w : Frame -> String
-w f =
-    case f.orientation of
-        Vertical ->
-            "20%"
-
-        Horizontal ->
-            "30%"
-
-
 movieView : ( Movie, ( Frame, Position ) ) -> Html Msg
 movieView ( movie, ( frame, position ) ) =
     let
@@ -205,31 +174,40 @@ movieView ( movie, ( frame, position ) ) =
         ( row1, row2 ) =
             position.rows
     in
-        video
-            [ (loop True)
-            , (style
+        div
+            [ (style
                 [ ( "grid-row", (toString row1) ++ "/" ++ (toString row2) )
                 , ( "grid-column", (toString col1) ++ "/" ++ (toString col2) )
+                , ( "background-color", "#ccc" )
+                , ( "padding", "5px" )
                 ]
               )
-            , (src ("/public/" ++ movie.fileName))
-            , (autoplay True)
             ]
-            []
+            [ video
+                [ (loop True)
+                , (style
+                    []
+                  )
+                , (src ("/public/" ++ movie.fileName))
+                , (autoplay True)
+                ]
+                []
+            ]
 
 
 view : Model -> Html Msg
 view model =
     let
         (Grid ( _, _, items )) =
-            (foldl gridAppend grid model.layout.frames)
+            (foldl gridAppend (Grid ( 12, 9, [] )) model.layout.frames)
     in
         div
             [ (style
                 [ ( "display", "grid" )
                 , ( "grid-gap", "10px" )
                 , ( "max-width", "90vw" )
-                , ( "grid-auto-rows", "minmax(100px, auto)" )
+                , ( "justify-items", "center")
+                , ( "align-items", "center")
                 ]
               )
             ]
