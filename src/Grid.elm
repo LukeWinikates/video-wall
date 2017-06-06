@@ -65,8 +65,14 @@ findPositionForItem g s =
     (toPointList g.edges) |> List.map (\p -> fromBasePoint p s) |> List.filter (fits g) |> List.head
 
 
+endOfCurrentColumn : GridRectangle -> Point
+endOfCurrentColumn r =
+    { x = r.leftColumn, y = r.bottomRow }
 
--- TODO: generating the two possible edges is a little funky - should it be its own function?
+
+startOfNextColumn : GridRectangle -> Point
+startOfNextColumn r =
+    { x = r.rightColumn, y = 1 }
 
 
 append : a -> Grid a -> Grid a
@@ -78,8 +84,8 @@ append frame grid =
                     | items = grid.items ++ [ ( frame, newRect ) ]
                     , edges =
                         grid.edges
-                            |> insert { x = newRect.leftColumn, y = newRect.bottomRow }
-                            |> insert { x = newRect.rightColumn, y = 1 }
+                            |> insert (endOfCurrentColumn newRect)
+                            |> insert (startOfNextColumn newRect)
                 }
             )
         |> withDefault grid
