@@ -1,5 +1,6 @@
-module Grid exposing (sizer, append, Grid(..), Position)
+module Grid exposing (sizer, append, Grid(..), Position, items, appendAll)
 
+import List exposing (foldl)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
 
@@ -14,6 +15,11 @@ type Grid a
 sizer : Grid a -> (a -> Size)
 sizer (Grid (f, _,_,_)) = f
 
+appendAll : Grid a -> List a -> Grid a
+appendAll g items= (foldl append (Grid (sizer g, 12, 9, [] )) items)
+
+items : Grid a -> List (a, Position)
+items (Grid(_,_,_,i)) = i
 
 -- TODO: the grid stores not just a list of items, but a list of the leading edges of columns
 -- TODO: so rather than consider merely the latest column, we can consider each column in that data structure in turn

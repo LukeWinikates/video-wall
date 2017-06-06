@@ -65,8 +65,8 @@ type alias Frame =
 -- todo: this seems too verbose. Can it be refactored?
 -- todo: are frames relative to the Grid size -- the grid feels like a data structure that should be factored out into its own space, but that's been hard to do
 
-gridSize : Frame -> ( Int, Int )
-gridSize { orientation, scale } =
+frameSize : Frame -> ( Int, Int )
+frameSize { orientation, scale } =
     case (orientation, scale) of
       (Vertical, Small) -> ( 1, 3 )
       (Vertical, Medium) -> ( 2, 5 )
@@ -144,13 +144,11 @@ movieView ( movie, ( frame, position ) ) =
             ]
 
 
--- TODO: refactor the grid appendall into the grid module
--- TODO: items function on the grid module
 view : Model -> Html Msg
 view model =
     let
-        (Grid (_, _, _, items )) =
-            (foldl append (Grid (gridSize, 12, 9, [] )) model.layout.frames)
+        grid =
+            (appendAll (Grid (frameSize, 12, 9, [] )) model.layout.frames)
     in
         div
             [ (style
@@ -162,4 +160,4 @@ view model =
                 ]
               )
             ]
-            (map movieView (zip model.layout.movies items))
+            (map movieView (zip model.layout.movies (Grid.items grid)))
