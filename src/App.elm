@@ -61,15 +61,28 @@ frames =
 type alias Frame =
     { orientation : Orientation, scale : Scale }
 
+
 frameSize : Frame -> ( Int, Int )
 frameSize { orientation, scale } =
-    case (orientation, scale) of
-      (Vertical, Small) -> ( 1, 3 )
-      (Vertical, Medium) -> ( 2, 5 )
-      (Vertical, Large) -> ( 3, 7 )
-      (Horizontal, Small) -> ( 3, 1 )
-      (Horizontal, Medium) -> ( 5, 2 )
-      (Horizontal, Large) -> ( 7, 3 )
+    case ( orientation, scale ) of
+        ( Vertical, Small ) ->
+            ( 1, 3 )
+
+        ( Vertical, Medium ) ->
+            ( 2, 5 )
+
+        ( Vertical, Large ) ->
+            ( 3, 7 )
+
+        ( Horizontal, Small ) ->
+            ( 3, 1 )
+
+        ( Horizontal, Medium ) ->
+            ( 5, 2 )
+
+        ( Horizontal, Large ) ->
+            ( 7, 3 )
+
 
 main : Program Never Model Msg
 main =
@@ -112,35 +125,30 @@ update action model =
 
 movieView : ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
 movieView ( movie, ( frame, gridRectangle ) ) =
-    let
-        ( col1, col2 ) =
-            gridRectangle.columns
-
-        ( row1, row2 ) =
-            gridRectangle.rows
-    in
-        div
-            [ (style
-                [ ( "grid-row", (toString row1) ++ "/" ++ (toString row2) )
-                , ( "grid-column", (toString col1) ++ "/" ++ (toString col2) )
-                , ( "background-color", "#ccc" )
-                , ( "padding", "5px" )
-                ]
-              )
+    div
+        [ (style
+            [ ( "grid-row", (toString gridRectangle.topRow) ++ "/" ++ (toString gridRectangle.bottomRow) )
+            , ( "grid-column", (toString gridRectangle.leftColumn) ++ "/" ++ (toString gridRectangle.rightColumn) )
+            , ( "background-color", "#ccc" )
+            , ( "padding", "5px" )
             ]
-            [ video
-                [ (loop True)
-                , (style
-                    []
-                  )
-                , (src ("/public/" ++ movie.fileName))
-                , (autoplay True)
-                ]
+          )
+        ]
+        [ video
+            [ (loop True)
+            , (style
                 []
+              )
+            , (src ("/public/" ++ movie.fileName))
+            , (autoplay True)
             ]
+            []
+        ]
 
 
-makeGrid = Grid.forType frameSize
+makeGrid =
+    Grid.forType frameSize
+
 
 view : Model -> Html Msg
 view model =
