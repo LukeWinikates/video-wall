@@ -1,4 +1,4 @@
-module Grid exposing (append, Position, appendAll, forType)
+module Grid exposing (append, GridRectangle, appendAll, forType)
 
 import List exposing (foldl)
 import List.Extra exposing (zip, last)
@@ -6,7 +6,7 @@ import Tuple exposing (second)
 
 type alias Size = (Int, Int)
 
-type alias Position =
+type alias GridRectangle =
     { rows : ( Int, Int ), columns : ( Int, Int ) }
 
 type alias Sizer a = (a -> Size)
@@ -15,7 +15,7 @@ type alias Grid a =
   { sizer : Sizer a,
    width : Int,
    height : Int,
-   items: List (a, Position),
+   items: List (a, GridRectangle),
    edges: List (Int,Int)
   }
 
@@ -28,7 +28,7 @@ forType sizer x y = { sizer = sizer, width = x, height = y, items = [], edges = 
 
 -- TODO: the grid stores not just a list of items, but a list of the leading edges of columns
 -- TODO: so rather than consider merely the latest column, we can consider each column in that data structure in turn
-posForNext : Grid a -> a -> Position
+posForNext : Grid a -> a -> GridRectangle
 posForNext g sizable =
     let
         ( widthNeeded, heightNeeded ) =

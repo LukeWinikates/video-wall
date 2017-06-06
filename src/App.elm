@@ -110,14 +110,14 @@ update action model =
     ( model, Cmd.none )
 
 
-movieView : ( Movie, ( Frame, Position ) ) -> Html Msg
-movieView ( movie, ( frame, position ) ) =
+movieView : ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
+movieView ( movie, ( frame, gridRectangle ) ) =
     let
         ( col1, col2 ) =
-            position.columns
+            gridRectangle.columns
 
         ( row1, row2 ) =
-            position.rows
+            gridRectangle.rows
     in
         div
             [ (style
