@@ -57,13 +57,15 @@ frames =
     ]
 
 
-
---layout = a list of frames
--- frame = an orientation
-
-
 type alias Frame =
     { orientation : Orientation, scale : Scale }
+
+
+
+-- todo: extract grid into its own module
+-- todo: Frame, Position, and Grid : are any of these redundant? Can they be eliminated?
+-- todo: this seems too verbose. Can it be refactored?
+-- todo: are frames relative to the Grid size -- the grid feels like a data structure that should be factored out into its own space, but that's been hard to do
 
 
 gridSize : Frame -> ( Int, Int )
@@ -100,30 +102,33 @@ type Grid
     = Grid ( Int, Int, List ( Frame, Position ) )
 
 
+
+-- TODO: the grid stores not just a list of items, but a list of the leading edges of columns
+-- TODO: so rather than consider merely the latest column, we can consider each column in that data structure in turn
 posForNext : Grid -> Frame -> Position
 posForNext (Grid ( gridWidth, gridHeight, items )) frame =
     let
         ( widthNeeded, heightNeeded ) =
             gridSize frame
     in
-        case last items |> Debug.log "last items" of
+        case last items of
             Nothing ->
                 { rows = ( 1, 1 + heightNeeded ), columns = ( 1, 1 + widthNeeded ) }
 
             Just ( _, lastItem ) ->
                 if (lastItem.rows |> second) + heightNeeded > gridHeight then
-                    Debug.log "new column" <| { rows = ( 1, 1 + heightNeeded ), columns = ( lastItem.columns |> second, (lastItem.columns |> second) + widthNeeded ) }
+                    { rows = ( 1, 1 + heightNeeded ), columns = ( lastItem.columns |> second, (lastItem.columns |> second) + widthNeeded ) }
                 else
-                    Debug.log "same column" <| { rows = ( lastItem.rows |> second, (lastItem.rows |> second) + heightNeeded ), columns = lastItem.columns }
+                    { rows = ( lastItem.rows |> second, (lastItem.rows |> second) + heightNeeded ), columns = lastItem.columns }
 
 
 gridAppend : Frame -> Grid -> Grid
-gridAppend frame g =
+gridAppend frame grid =
     let
         (Grid ( cols, rows, items )) =
-            g
+            grid
     in
-        Grid ( cols, rows, List.append items [ ( frame, posForNext g frame ) ] )
+        Grid ( cols, rows, List.append items [ ( frame, posForNext grid frame ) ] )
 
 
 main : Program Never Model Msg
@@ -206,8 +211,8 @@ view model =
                 [ ( "display", "grid" )
                 , ( "grid-gap", "10px" )
                 , ( "max-width", "90vw" )
-                , ( "justify-items", "center")
-                , ( "align-items", "center")
+                , ( "justify-items", "center" )
+                , ( "align-items", "center" )
                 ]
               )
             ]
