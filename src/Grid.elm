@@ -47,4 +47,4 @@ posForNext g sizable =
 
 append : a -> Grid a -> Grid a
 append frame grid =
-         { grid | items = List.append grid.items [ ( frame, posForNext grid frame ) ] }
+         { grid | items = grid.items ++ [ ( frame, posForNext grid frame ) ] }
