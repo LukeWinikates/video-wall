@@ -62,26 +62,26 @@ type alias Frame =
     { orientation : Orientation, scale : Scale }
 
 
-frameSize : Frame -> ( Int, Int )
+frameSize : Frame -> Size
 frameSize { orientation, scale } =
     case ( orientation, scale ) of
         ( Vertical, Small ) ->
-            ( 1, 3 )
+            { width = 1, height = 3 }
 
         ( Vertical, Medium ) ->
-            ( 2, 5 )
+            { width = 2, height = 5 }
 
         ( Vertical, Large ) ->
-            ( 3, 7 )
+            { width = 3, height = 7 }
 
         ( Horizontal, Small ) ->
-            ( 3, 1 )
+            { width = 3, height = 1 }
 
         ( Horizontal, Medium ) ->
-            ( 5, 2 )
+            { width = 5, height = 2 }
 
         ( Horizontal, Large ) ->
-            ( 7, 3 )
+            { width = 7, height = 3 }
 
 
 main : Program Never Model Msg
@@ -165,7 +165,7 @@ view : Model -> Html Msg
 view model =
     let
         grid =
-            (appendAll (makeGrid 24 9) model.layout.frames)
+            appendAll (makeGrid { width = 24, height = 9 }) model.layout.frames
     in
         div
             [ (style

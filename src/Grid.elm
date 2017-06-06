@@ -1,4 +1,4 @@
-module Grid exposing (append, GridRectangle, appendAll, forType)
+module Grid exposing (append, GridRectangle, appendAll, forType, Size)
 
 import List exposing (foldl)
 import List.Extra exposing (zip, last)
@@ -12,7 +12,9 @@ import Point exposing (Point)
 
 
 type alias Size =
-    ( Int, Int )
+    { height : Int
+    , width : Int
+    }
 
 
 type alias GridRectangle =
@@ -41,13 +43,18 @@ appendAll g items =
     (foldl append g items)
 
 
-forType : (a -> Size) -> Int -> Int -> Grid a
-forType sizer x y =
-    { sizer = sizer, width = x, height = y, items = [], edges = single { x = 1, y = 1 } }
+forType : (a -> Size) -> Size -> Grid a
+forType sizer gridSize =
+    { sizer = sizer
+    , width = gridSize.width
+    , height = gridSize.height
+    , items = []
+    , edges = single { x = 1, y = 1 }
+    }
 
 
 fromBasePoint : Point -> Size -> GridRectangle
-fromBasePoint point ( width, height ) =
+fromBasePoint point { width, height } =
     { leftColumn = point.x
     , rightColumn = point.x + width
     , topRow = point.y
