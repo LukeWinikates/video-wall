@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import List exposing (foldl, head, map, tail, take)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
+import Grid exposing (..)
 
 
 type Orientation
@@ -60,13 +61,9 @@ frames =
 type alias Frame =
     { orientation : Orientation, scale : Scale }
 
-
-
--- todo: extract grid into its own module
 -- todo: Frame, Position, and Grid : are any of these redundant? Can they be eliminated?
 -- todo: this seems too verbose. Can it be refactored?
 -- todo: are frames relative to the Grid size -- the grid feels like a data structure that should be factored out into its own space, but that's been hard to do
-
 
 gridSize : Frame -> ( Int, Int )
 gridSize { orientation, scale } =
@@ -92,43 +89,6 @@ gridSize { orientation, scale } =
 
                 Large ->
                     ( 7, 3 )
-
-
-type alias Position =
-    { rows : ( Int, Int ), columns : ( Int, Int ) }
-
-
-type Grid
-    = Grid ( Int, Int, List ( Frame, Position ) )
-
-
-
--- TODO: the grid stores not just a list of items, but a list of the leading edges of columns
--- TODO: so rather than consider merely the latest column, we can consider each column in that data structure in turn
-posForNext : Grid -> Frame -> Position
-posForNext (Grid ( gridWidth, gridHeight, items )) frame =
-    let
-        ( widthNeeded, heightNeeded ) =
-            gridSize frame
-    in
-        case last items of
-            Nothing ->
-                { rows = ( 1, 1 + heightNeeded ), columns = ( 1, 1 + widthNeeded ) }
-
-            Just ( _, lastItem ) ->
-                if (lastItem.rows |> second) + heightNeeded > gridHeight then
-                    { rows = ( 1, 1 + heightNeeded ), columns = ( lastItem.columns |> second, (lastItem.columns |> second) + widthNeeded ) }
-                else
-                    { rows = ( lastItem.rows |> second, (lastItem.rows |> second) + heightNeeded ), columns = lastItem.columns }
-
-
-gridAppend : Frame -> Grid -> Grid
-gridAppend frame grid =
-    let
-        (Grid ( cols, rows, items )) =
-            grid
-    in
-        Grid ( cols, rows, List.append items [ ( frame, posForNext grid frame ) ] )
 
 
 main : Program Never Model Msg
@@ -203,8 +163,8 @@ movieView ( movie, ( frame, position ) ) =
 view : Model -> Html Msg
 view model =
     let
-        (Grid ( _, _, items )) =
-            (foldl gridAppend (Grid ( 12, 9, [] )) model.layout.frames)
+        (Grid (_, _, _, items )) =
+            (foldl append (Grid (gridSize, 12, 9, [] )) model.layout.frames)
     in
         div
             [ (style
