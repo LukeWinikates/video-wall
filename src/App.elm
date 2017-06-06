@@ -123,16 +123,17 @@ update action model =
     ( model, Cmd.none )
 
 
-
--- TODO: should the styles generated from the gridrectangle be encapsulated somehow?
+(//) : Int -> Int -> String
+(//) a b =
+    toString a ++ "/" ++ toString b
 
 
 movieView : ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
 movieView ( movie, ( frame, gridRectangle ) ) =
     div
         [ (style
-            [ ( "grid-row", (toString gridRectangle.topRow) ++ "/" ++ (toString gridRectangle.bottomRow) )
-            , ( "grid-column", (toString gridRectangle.leftColumn) ++ "/" ++ (toString gridRectangle.rightColumn) )
+            [ ( "grid-row", gridRectangle.topRow // gridRectangle.bottomRow )
+            , ( "grid-column", gridRectangle.leftColumn // gridRectangle.rightColumn )
             , ( "background-color", "#ccc" )
             , ( "padding", "5px" )
             ]
