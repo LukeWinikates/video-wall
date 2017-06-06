@@ -154,7 +154,7 @@ view : Model -> Html Msg
 view model =
     let
         grid =
-            (appendAll (makeGrid 12 9) model.layout.frames)
+            (appendAll (makeGrid 24 9) model.layout.frames)
     in
         div
             [ (style
