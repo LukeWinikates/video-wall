@@ -60,12 +60,8 @@ fits grid rect =
     grid.height > rect.bottomRow
 
 
-
--- TODO: this is kind of a bad name.
-
-
-nextRootPos : Grid a -> Size -> Maybe GridRectangle
-nextRootPos g s =
+findPositionForItem : Grid a -> Size -> Maybe GridRectangle
+findPositionForItem g s =
     (toPointList g.edges) |> List.map (\p -> fromBasePoint p s) |> List.filter (fits g) |> List.head
 
 
@@ -75,7 +71,7 @@ nextRootPos g s =
 
 append : a -> Grid a -> Grid a
 append frame grid =
-    nextRootPos grid (grid.sizer frame)
+    findPositionForItem grid (grid.sizer frame)
         |> Maybe.map
             (\newRect ->
                 { grid
