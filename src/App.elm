@@ -61,10 +61,6 @@ frames =
 type alias Frame =
     { orientation : Orientation, scale : Scale }
 
--- todo: Frame, Position, and Grid : are any of these redundant? Can they be eliminated?
--- todo: this seems too verbose. Can it be refactored?
--- todo: are frames relative to the Grid size -- the grid feels like a data structure that should be factored out into its own space, but that's been hard to do
-
 frameSize : Frame -> ( Int, Int )
 frameSize { orientation, scale } =
     case (orientation, scale) of
@@ -144,11 +140,13 @@ movieView ( movie, ( frame, position ) ) =
             ]
 
 
+makeGrid = Grid.forType frameSize
+
 view : Model -> Html Msg
 view model =
     let
         grid =
-            (appendAll (Grid (frameSize, 12, 9, [] )) model.layout.frames)
+            (appendAll (makeGrid 12 9) model.layout.frames)
     in
         div
             [ (style
@@ -160,4 +158,4 @@ view model =
                 ]
               )
             ]
-            (map movieView (zip model.layout.movies (Grid.items grid)))
+            (map movieView (zip model.layout.movies grid.items))

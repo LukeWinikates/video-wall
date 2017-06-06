@@ -1,4 +1,4 @@
-module Grid exposing (sizer, append, Grid(..), Position, items, appendAll)
+module Grid exposing (append, Position, appendAll, forType)
 
 import List exposing (foldl)
 import List.Extra exposing (zip, last)
@@ -9,32 +9,37 @@ type alias Size = (Int, Int)
 type alias Position =
     { rows : ( Int, Int ), columns : ( Int, Int ) }
 
-type Grid a
-    = Grid (a -> Size, Int, Int, List ( a, Position ) )
+type alias Sizer a = (a -> Size)
 
-sizer : Grid a -> (a -> Size)
-sizer (Grid (f, _,_,_)) = f
+type alias Grid a =
+  { sizer : Sizer a,
+   width : Int,
+   height : Int,
+   items: List (a, Position),
+   edges: List (Int,Int)
+  }
+
 
 appendAll : Grid a -> List a -> Grid a
-appendAll g items= (foldl append (Grid (sizer g, 12, 9, [] )) items)
+appendAll g items= (foldl append g items)
 
-items : Grid a -> List (a, Position)
-items (Grid(_,_,_,i)) = i
+forType : (a -> Size) -> Int -> Int -> Grid a
+forType sizer x y = { sizer = sizer, width = x, height = y, items = [], edges = [] }
 
 -- TODO: the grid stores not just a list of items, but a list of the leading edges of columns
 -- TODO: so rather than consider merely the latest column, we can consider each column in that data structure in turn
 posForNext : Grid a -> a -> Position
-posForNext (Grid (sizer, gridWidth, gridHeight, items )) frame =
+posForNext g sizable =
     let
         ( widthNeeded, heightNeeded ) =
-            sizer frame
+            g.sizer sizable
     in
-        case last items of
+        case last g.items of
             Nothing ->
                 { rows = ( 1, 1 + heightNeeded ), columns = ( 1, 1 + widthNeeded ) }
 
             Just ( _, lastItem ) ->
-                if (lastItem.rows |> second) + heightNeeded > gridHeight then
+                if (lastItem.rows |> second) + heightNeeded > g.height then
                     { rows = ( 1, 1 + heightNeeded ), columns = ( lastItem.columns |> second, (lastItem.columns |> second) + widthNeeded ) }
                 else
                     { rows = ( lastItem.rows |> second, (lastItem.rows |> second) + heightNeeded ), columns = lastItem.columns }
@@ -42,8 +47,4 @@ posForNext (Grid (sizer, gridWidth, gridHeight, items )) frame =
 
 append : a -> Grid a -> Grid a
 append frame grid =
-    let
-        (Grid (s, cols, rows, items )) =
-            grid
-    in
-        Grid (s, cols, rows, List.append items [ ( frame, posForNext grid frame ) ] )
+         { grid | items = List.append grid.items [ ( frame, posForNext grid frame ) ] }
