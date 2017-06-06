@@ -67,29 +67,13 @@ type alias Frame =
 
 gridSize : Frame -> ( Int, Int )
 gridSize { orientation, scale } =
-    case orientation of
-        Vertical ->
-            case scale of
-                Small ->
-                    ( 1, 3 )
-
-                Medium ->
-                    ( 2, 5 )
-
-                Large ->
-                    ( 3, 7 )
-
-        Horizontal ->
-            case scale of
-                Small ->
-                    ( 3, 1 )
-
-                Medium ->
-                    ( 5, 2 )
-
-                Large ->
-                    ( 7, 3 )
-
+    case (orientation, scale) of
+      (Vertical, Small) -> ( 1, 3 )
+      (Vertical, Medium) -> ( 2, 5 )
+      (Vertical, Large) -> ( 3, 7 )
+      (Horizontal, Small) -> ( 3, 1 )
+      (Horizontal, Medium) -> ( 5, 2 )
+      (Horizontal, Large) -> ( 7, 3 )
 
 main : Program Never Model Msg
 main =
@@ -160,6 +144,8 @@ movieView ( movie, ( frame, position ) ) =
             ]
 
 
+-- TODO: refactor the grid appendall into the grid module
+-- TODO: items function on the grid module
 view : Model -> Html Msg
 view model =
     let
