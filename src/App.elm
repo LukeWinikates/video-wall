@@ -123,6 +123,10 @@ update action model =
     ( model, Cmd.none )
 
 
+
+-- TODO: should the styles generated from the gridrectangle be encapsulated somehow?
+
+
 movieView : ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
 movieView ( movie, ( frame, gridRectangle ) ) =
     div
@@ -148,6 +152,13 @@ movieView ( movie, ( frame, gridRectangle ) ) =
 
 makeGrid =
     Grid.forType frameSize
+
+
+
+-- TODO: 24 9 is a pretty random gridsize.
+-- TODO: make movies swappable
+-- TODO: more layouts
+-- TODO: layouts that allow stacking of wider elements and can fill in the space properly... going to be hard
 
 
 view : Model -> Html Msg

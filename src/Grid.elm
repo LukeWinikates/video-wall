@@ -3,8 +3,12 @@ module Grid exposing (append, GridRectangle, appendAll, forType)
 import List exposing (foldl)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
-import Dict exposing (Dict)
 import Maybe exposing (withDefault)
+import Edges exposing (Edges, insert, single, toPointList)
+import Point exposing (Point)
+
+
+-- TODO: change this to a record so the destrcturing isn't as painful
 
 
 type alias Size =
@@ -23,10 +27,6 @@ type alias Sizer a =
     a -> Size
 
 
-type alias Point =
-    { x : Int, y : Int }
-
-
 type alias Grid a =
     { sizer : Sizer a
     , width : Int
@@ -36,24 +36,6 @@ type alias Grid a =
     }
 
 
-type alias Edges =
-    Dict Int Int
-
-
-emptyEdges =
-    Dict.empty
-
-
-insertEdge : Point -> Edges -> Edges
-insertEdge point edges =
-    Dict.insert point.x point.y edges
-
-
-edgePoints : Edges -> List Point
-edgePoints e =
-    Dict.toList e |> List.map (\( x, y ) -> { x = x, y = y })
-
-
 appendAll : Grid a -> List a -> Grid a
 appendAll g items =
     (foldl append g items)
@@ -61,7 +43,7 @@ appendAll g items =
 
 forType : (a -> Size) -> Int -> Int -> Grid a
 forType sizer x y =
-    { sizer = sizer, width = x, height = y, items = [], edges = insertEdge { x = 1, y = 1 } emptyEdges }
+    { sizer = sizer, width = x, height = y, items = [], edges = single { x = 1, y = 1 } }
 
 
 fromBasePoint : Point -> Size -> GridRectangle
@@ -78,9 +60,17 @@ fits grid rect =
     grid.height > rect.bottomRow
 
 
+
+-- TODO: this is kind of a bad name.
+
+
 nextRootPos : Grid a -> Size -> Maybe GridRectangle
 nextRootPos g s =
-    (edgePoints g.edges) |> List.map (\p -> fromBasePoint p s) |> List.filter (fits g) |> List.head
+    (toPointList g.edges) |> List.map (\p -> fromBasePoint p s) |> List.filter (fits g) |> List.head
+
+
+
+-- TODO: generating the two possible edges is a little funky - should it be its own function?
 
 
 append : a -> Grid a -> Grid a
@@ -92,8 +82,8 @@ append frame grid =
                     | items = grid.items ++ [ ( frame, newRect ) ]
                     , edges =
                         grid.edges
-                            |> insertEdge { x = newRect.leftColumn, y = newRect.bottomRow }
-                            |> insertEdge { x = newRect.rightColumn, y = 1 }
+                            |> insert { x = newRect.leftColumn, y = newRect.bottomRow }
+                            |> insert { x = newRect.rightColumn, y = 1 }
                 }
             )
         |> withDefault grid
