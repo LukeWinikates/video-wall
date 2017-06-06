@@ -36,16 +36,16 @@ type alias Grid a =
     }
 
 
-type alias Edges
-    = Dict Int Int
+type alias Edges =
+    Dict Int Int
 
 
 emptyEdges =
     Dict.empty
 
--- are these backwards? I don't think so -- seems like it's a map from the x position to the y position
-insertEdge : Edges -> Point -> Edges
-insertEdge edges point =
+
+insertEdge : Point -> Edges -> Edges
+insertEdge point edges =
     Dict.insert point.x point.y edges
 
 
@@ -61,7 +61,7 @@ appendAll g items =
 
 forType : (a -> Size) -> Int -> Int -> Grid a
 forType sizer x y =
-    { sizer = sizer, width = x, height = y, items = [], edges = insertEdge emptyEdges { x = 1, y = 1 } }
+    { sizer = sizer, width = x, height = y, items = [], edges = insertEdge { x = 1, y = 1 } emptyEdges }
 
 
 fromBasePoint : Point -> Size -> GridRectangle
@@ -85,14 +85,15 @@ nextRootPos g s =
 
 append : a -> Grid a -> Grid a
 append frame grid =
-    let
-        size =
-            grid.sizer frame
-
-        maybeNewRect = nextRootPos grid size
-    in
-      (Maybe.map (\newRect ->
-        { grid
-            | items = grid.items ++ [ ( frame, newRect ) ]
-            , edges = insertEdge (insertEdge grid.edges { x = newRect.leftColumn, y = newRect.bottomRow }) { x = newRect.rightColumn, y = 1}
-        }) maybeNewRect ) |> withDefault grid
+    nextRootPos grid (grid.sizer frame)
+        |> Maybe.map
+            (\newRect ->
+                { grid
+                    | items = grid.items ++ [ ( frame, newRect ) ]
+                    , edges =
+                        grid.edges
+                            |> insertEdge { x = newRect.leftColumn, y = newRect.bottomRow }
+                            |> insertEdge { x = newRect.rightColumn, y = 1 }
+                }
+            )
+        |> withDefault grid
