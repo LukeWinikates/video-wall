@@ -1,6 +1,6 @@
 module App exposing (..)
 
-import Html exposing (Html, div, video)
+import Html exposing (Html, div, li, text, ul, video)
 import Html.Attributes exposing (autoplay, height, loop, src, style)
 import Html.Events exposing (..)
 import List exposing (foldl, head, map, tail, take)
@@ -17,26 +17,31 @@ type Orientation
 type alias Movie =
     { fileName : String
     , orientation : Orientation
+    , description : String
     }
+
+moviesByOrientation : List Movie -> Orientation -> List Movie
+moviesByOrientation movies orientation = List.filter (\m -> (m.orientation == orientation)) movies
 
 
 movies : List Movie
 movies =
-    [ { fileName = "IMG_6212.m4v", orientation = Vertical }
-    , { fileName = "IMG_6213.m4v", orientation = Vertical }
-    , { fileName = "IMG_6214.m4v", orientation = Vertical }
-    , { fileName = "IMG_6219.m4v", orientation = Vertical }
-    , { fileName = "IMG_6227.m4v", orientation = Horizontal }
-    , { fileName = "IMG_6230.m4v", orientation = Horizontal }
-    , { fileName = "IMG_6231.m4v", orientation = Vertical }
-    , { fileName = "IMG_6244.m4v", orientation = Vertical }
-    , { fileName = "IMG_6250.m4v", orientation = Vertical }
-    , { fileName = "IMG_6256.m4v", orientation = Vertical }
-    , { fileName = "IMG_6258.m4v", orientation = Horizontal }
-    , { fileName = "IMG_6259.m4v", orientation = Vertical }
-    , { fileName = "IMG_6260.m4v", orientation = Vertical }
-    , { fileName = "IMG_6263.m4v", orientation = Horizontal }
-    , { fileName = "IMG_6270.m4v", orientation = Vertical }
+    [ { fileName = "IMG_6212.m4v", orientation = Vertical, description = "Narrow angle through trees" }
+    , { fileName = "IMG_6216.m4v", orientation = Horizontal, description = "Through thick trees" }
+    , { fileName = "IMG_6230.m4v", orientation = Horizontal, description = "Green water with log in foreground" }
+    , { fileName = "IMG_6213.m4v", orientation = Vertical, description = "Long distance across open river" }
+    , { fileName = "IMG_6214.m4v", orientation = Vertical, description = "Upriver through trees" }
+    , { fileName = "IMG_6219.m4v", orientation = Vertical, description = "Upriver from on top of log" }
+    , { fileName = "IMG_6227.m4v", orientation = Horizontal, description = "Looking down into jade water" }
+    , { fileName = "IMG_6231.m4v", orientation = Vertical, description = "Just woods" }
+    , { fileName = "IMG_6244.m4v", orientation = Vertical, description = "Looking down into water channel" }
+    , { fileName = "IMG_6250.m4v", orientation = Vertical, description = "Narrow view between two trees" }
+    , { fileName = "IMG_6256.m4v", orientation = Vertical, description = "Heavy waterfall in background" }
+    , { fileName = "IMG_6258.m4v", orientation = Horizontal, description = "Waterfall obscured by plants" }
+    , { fileName = "IMG_6259.m4v", orientation = Vertical, description = "Barely visible waterfall" }
+    , { fileName = "IMG_6260.m4v", orientation = Vertical, description = "Clearest closest waterfall view" }
+    , { fileName = "IMG_6263.m4v", orientation = Horizontal, description = "Water flowing under log" }
+    , { fileName = "IMG_6270.m4v", orientation = Vertical, description = "View downriver from sitting on log" }
     ]
 
 
@@ -51,15 +56,20 @@ type alias Layout =
 
 
 frames =
-    [ { orientation = Vertical, scale = Large }
-    , { orientation = Horizontal, scale = Medium }
-    , { orientation = Horizontal, scale = Medium }
-    , { orientation = Vertical, scale = Large }
+    [ { orientation = Vertical, scale = Large, mode = Showing }
+    , { orientation = Horizontal, scale = Medium, mode = Showing }
+    , { orientation = Horizontal, scale = Medium, mode = Showing }
+    , { orientation = Vertical, scale = Large, mode = Showing }
     ]
 
 
+type VideoMode
+    = Menu
+    | Showing
+
+
 type alias Frame =
-    { orientation : Orientation, scale : Scale }
+    { orientation : Orientation, scale : Scale, mode : VideoMode }
 
 
 frameSize : Frame -> Size
@@ -103,11 +113,7 @@ init =
     ( { layout =
             { frames = frames
             , movies =
-                [ { fileName = "IMG_6250.m4v", orientation = Vertical }
-                , { fileName = "IMG_6227.m4v", orientation = Horizontal }
-                , { fileName = "IMG_6230.m4v", orientation = Horizontal }
-                , { fileName = "IMG_6231.m4v", orientation = Vertical }
-                ]
+                (take 4 movies)
             }
       }
     , Cmd.none
@@ -115,17 +121,77 @@ init =
 
 
 type Msg
-    = Msg
+    = ShowMenu Movie
+    | Swap Movie Movie
+
+
+swapMovie : Model -> Movie -> Movie -> Model
+swapMovie model movie newMovie =
+    let
+        layout =
+            model.layout
+    in
+        { model
+            | layout =
+                { movies = List.Extra.replaceIf ((==) movie) newMovie model.layout.movies
+                , frames = (map (\f -> { f | mode = Showing }) frames)
+                }
+        }
+
+
+showMenu : Model -> Movie -> Model
+showMenu model movie =
+    let
+        layout =
+            model.layout
+
+        index =
+            Maybe.withDefault -1 (List.Extra.findIndex ((==) movie)  model.layout.movies)
+
+        changedFrames =
+            List.indexedMap
+                (\idx frame ->
+                  { frame | mode = if idx == index then Menu else Showing }
+                )
+                model.layout.frames
+    in
+        { model | layout = { layout | frames = changedFrames } }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
-    ( model, Cmd.none )
+    case action of
+        Swap movie newMovie ->
+            ( (swapMovie model movie newMovie), Cmd.none )
+
+        ShowMenu movie ->
+            ( showMenu model movie, Cmd.none )
 
 
 (//) : Int -> Int -> String
 (//) a b =
     toString a ++ "/" ++ toString b
+
+
+movieItem : Movie -> Movie -> Html Msg
+movieItem currentMovie subject =
+    li [onClick (Swap currentMovie subject)] [ text subject.description ]
+
+
+frameView : Frame -> Movie -> Html Msg
+frameView frame currentMovie =
+    case frame.mode of
+        Showing ->
+            video
+                [ (loop True)
+                , (onClick (ShowMenu currentMovie))
+                , (src ("/public/" ++ currentMovie.fileName))
+                , (autoplay True)
+                ]
+                []
+
+        Menu ->
+            ul [] (map (movieItem currentMovie) (moviesByOrientation movies currentMovie.orientation))
 
 
 movieView : ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
@@ -139,16 +205,7 @@ movieView ( movie, ( frame, gridRectangle ) ) =
             ]
           )
         ]
-        [ video
-            [ (loop True)
-            , (style
-                []
-              )
-            , (src ("/public/" ++ movie.fileName))
-            , (autoplay True)
-            ]
-            []
-        ]
+        [ frameView frame movie ]
 
 
 makeGrid =
@@ -157,7 +214,6 @@ makeGrid =
 
 
 -- TODO: 24 9 is a pretty random gridsize.
--- TODO: make movies swappable
 -- TODO: more layouts
 -- TODO: layouts that allow stacking of wider elements and can fill in the space properly... going to be hard
 
