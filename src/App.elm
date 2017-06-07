@@ -23,6 +23,7 @@ type alias Movie =
 moviesByOrientation : List Movie -> Orientation -> List Movie
 moviesByOrientation movies orientation = List.filter (\m -> (m.orientation == orientation)) movies
 
+-- TODO: put the selected movies and the frame definition into the URL
 
 movies : List Movie
 movies =
@@ -185,6 +186,7 @@ frameView frame currentMovie =
             video
                 [ (loop True)
                 , (onClick (ShowMenu currentMovie))
+                , (style [("max-width", "100%")])
                 , (src ("/public/" ++ currentMovie.fileName))
                 , (autoplay True)
                 ]
