@@ -3,7 +3,7 @@ module App exposing (..)
 import Html exposing (Html, div, li, text, ul, video)
 import Html.Attributes exposing (autoplay, height, loop, src, style)
 import Html.Events exposing (..)
-import List exposing (foldl, head, map, tail, take)
+import List exposing (foldl, head, indexedMap, map, tail, take)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
 import Grid exposing (..)
@@ -11,6 +11,10 @@ import Geometry exposing (..)
 import Navigation exposing (..)
 import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
+
+
+-- TODO: make movie changes correctly effect the url
+-- TODO: simpliy the Model... model considerably
 
 
 type Route
@@ -47,11 +51,13 @@ framesFromStrings accumulator chars =
         _ ->
             accumulator
 
-(||>) : Maybe a -> (a->b) -> Maybe b
+
+(||>) : Maybe a -> (a -> b) -> Maybe b
 (||>) ma f =
-  Maybe.map f ma
+    Maybe.map f ma
 
 
+-- TODO: address defaults
 modelFrom : Route -> Model
 modelFrom (LayoutsRoute frames movieString) =
     { layout =
@@ -66,6 +72,7 @@ route =
     oneOf
         [ UrlParser.map LayoutsRoute (top <?> stringParam "frames" <?> stringParam "movies")
         ]
+
 
 type Scale
     = Small
@@ -129,46 +136,53 @@ init location =
 
 
 type Msg
-    = ShowMenu Movie
-    | Swap Movie Movie
+    = ShowMenu Int
+    | Swap Int Movie
     | UrlChange Navigation.Location
 
 
-swapMovie : Model -> Movie -> Movie -> Model
-swapMovie model movie newMovie =
+showAllMovies : Model -> Model
+showAllMovies model =
     let
         layout =
             model.layout
     in
         { model
             | layout =
-                { movies = List.Extra.replaceIf ((==) movie) newMovie model.layout.movies
-                , frames = (map (\f -> { f | mode = Showing }) model.layout.frames)
+                { layout
+                    | frames = (map (\f -> { f | mode = Showing }) model.layout.frames)
                 }
         }
 
 
-showMenu : Model -> Movie -> Model
-showMenu model movie =
+swapMovie : Model -> Int -> Movie -> Model
+swapMovie model index newMovie =
+    let
+        layout =
+            model.layout
+    in
+        { model
+            | layout =
+                { layout | movies = (List.Extra.setAt (Debug.log "index" index) newMovie layout.movies) |> Maybe.withDefault model.layout.movies }
+        }
+            |> showAllMovies
+
+
+showMenu : Model -> Int -> Model
+showMenu model index =
     let
         layout =
             model.layout
 
-        index =
-            Maybe.withDefault -1 (List.Extra.findIndex ((==) movie) model.layout.movies)
-
         changedFrames =
-            List.indexedMap
-                (\idx frame ->
+            List.Extra.updateAt index
+                (\frame ->
                     { frame
-                        | mode =
-                            if idx == index then
-                                Menu
-                            else
-                                Showing
+                        | mode = Menu
                     }
                 )
                 model.layout.frames
+                |> Maybe.withDefault model.layout.frames
     in
         { model | layout = { layout | frames = changedFrames } }
 
@@ -179,8 +193,8 @@ update action model =
         Swap movie newMovie ->
             ( (swapMovie model movie newMovie), Cmd.none )
 
-        ShowMenu movie ->
-            ( showMenu model movie, Cmd.none )
+        ShowMenu index ->
+            ( showMenu model index, Cmd.none )
 
         UrlChange location ->
             ( model, Cmd.none )
@@ -191,29 +205,29 @@ update action model =
     toString a ++ "/" ++ toString b
 
 
-movieItem : Movie -> Movie -> Html Msg
-movieItem currentMovie subject =
-    li [ onClick (Swap currentMovie subject) ] [ text subject.description ]
+movieItem : Int -> Movie -> Html Msg
+movieItem index subject =
+    li [ onClick (Swap index subject) ] [ text subject.description ]
 
 
-frameView : Frame -> Movie -> Html Msg
-frameView frame currentMovie =
+frameView : Frame -> Int -> Movie -> Html Msg
+frameView frame index movie =
     case frame.mode of
         Showing ->
             video
                 [ (loop True)
-                , (onClick (ShowMenu currentMovie))
-                , (src ("/public/" ++ currentMovie.fileName))
+                , (onClick (ShowMenu index))
+                , (src ("/public/" ++ movie.fileName))
                 , (autoplay True)
                 ]
                 []
 
         Menu ->
-            ul [] (map (movieItem currentMovie) (byOrientation currentMovie.orientation))
+            ul [] (map (movieItem index) (byOrientation movie.orientation))
 
 
-movieView : ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
-movieView ( movie, ( frame, gridRectangle ) ) =
+movieView : Int -> ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
+movieView index ( movie, ( frame, gridRectangle ) ) =
     div
         [ (style
             [ ( "grid-row", gridRectangle.topRow // gridRectangle.bottomRow )
@@ -223,7 +237,7 @@ movieView ( movie, ( frame, gridRectangle ) ) =
             ]
           )
         ]
-        [ frameView frame movie ]
+        [ frameView frame index movie ]
 
 
 makeGrid =
@@ -252,4 +266,4 @@ view model =
                 ]
               )
             ]
-            (map movieView (zip model.layout.movies grid.items))
+            (indexedMap movieView (zip model.layout.movies grid.items))

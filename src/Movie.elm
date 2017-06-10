@@ -3,6 +3,7 @@ module Movie exposing (Movie, byOrientation, findById)
 import Geometry exposing (..)
 import List
 
+
 type alias Movie =
     { fileName : String
     , orientation : Orientation
@@ -39,4 +40,3 @@ movies =
 findById : String -> Maybe Movie
 findById id =
     movies |> List.filter (\m -> m.fileName == "IMG_" ++ id ++ ".m4v") |> List.head
-
