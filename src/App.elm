@@ -7,6 +7,63 @@ import List exposing (foldl, head, map, tail, take)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
 import Grid exposing (..)
+import Navigation exposing (..)
+import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
+
+
+type Route
+    = LayoutsRoute (Maybe String) (Maybe String)
+
+
+sizeFromString : Char -> Scale
+sizeFromString str =
+    case str of
+        'S' ->
+            Small
+
+        'M' ->
+            Medium
+
+        _ ->
+            Large
+
+
+framesFromStrings : List Frame -> List Char -> List Frame
+framesFromStrings accumulator chars =
+    case chars of
+        or :: sz :: rest ->
+            { orientation =
+                if or == 'H' then
+                    Horizontal
+                else
+                    Vertical
+            , scale = sizeFromString sz
+            , mode = Showing
+            }
+                :: (framesFromStrings accumulator rest)
+
+        _ ->
+            accumulator
+
+(||>) : Maybe a -> (a->b) -> Maybe b
+(||>) ma f =
+  Maybe.map f ma
+
+
+modelFrom : Route -> Model
+modelFrom (LayoutsRoute frames movieString) =
+    { layout =
+        { frames = frames |> Maybe.withDefault "VLHLHLVL" |> String.toList |> framesFromStrings [] |> Debug.log "frames"
+        , movies = movieString ||> (String.split ",") ||> List.filterMap (findMovie movies) |> Maybe.withDefault []
+        }
+    }
+
+
+route : Parser (Route -> a) a
+route =
+    oneOf
+        [ UrlParser.map LayoutsRoute (top <?> stringParam "frames" <?> stringParam "movies")
+        ]
 
 
 type Orientation
@@ -20,10 +77,11 @@ type alias Movie =
     , description : String
     }
 
-moviesByOrientation : List Movie -> Orientation -> List Movie
-moviesByOrientation movies orientation = List.filter (\m -> (m.orientation == orientation)) movies
 
--- TODO: put the selected movies and the frame definition into the URL
+moviesByOrientation : List Movie -> Orientation -> List Movie
+moviesByOrientation movies orientation =
+    List.filter (\m -> (m.orientation == orientation)) movies |> Debug.log "movie"
+
 
 movies : List Movie
 movies =
@@ -46,6 +104,11 @@ movies =
     ]
 
 
+findMovie : List Movie -> String -> Maybe Movie
+findMovie movies id =
+    movies |> List.filter (\m -> m.fileName == "IMG_" ++ id ++ ".m4v") |> List.head
+
+
 type Scale
     = Small
     | Medium
@@ -54,14 +117,6 @@ type Scale
 
 type alias Layout =
     { frames : List Frame, movies : List Movie }
-
-
-frames =
-    [ { orientation = Vertical, scale = Large, mode = Showing }
-    , { orientation = Horizontal, scale = Medium, mode = Showing }
-    , { orientation = Horizontal, scale = Medium, mode = Showing }
-    , { orientation = Vertical, scale = Large, mode = Showing }
-    ]
 
 
 type VideoMode
@@ -95,9 +150,8 @@ frameSize { orientation, scale } =
             { width = 7, height = 3 }
 
 
-main : Program Never Model Msg
 main =
-    Html.program
+    Navigation.program UrlChange
         { init = init
         , view = view
         , update = update
@@ -109,14 +163,9 @@ type alias Model =
     { layout : Layout }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { layout =
-            { frames = frames
-            , movies =
-                (take 4 movies)
-            }
-      }
+init : Navigation.Location -> ( Model, Cmd Msg )
+init location =
+    ( (parseHash route location) |> Debug.log "stuff" |> Maybe.withDefault (LayoutsRoute Nothing Nothing) |> modelFrom
     , Cmd.none
     )
 
@@ -124,6 +173,7 @@ init =
 type Msg
     = ShowMenu Movie
     | Swap Movie Movie
+    | UrlChange Navigation.Location
 
 
 swapMovie : Model -> Movie -> Movie -> Model
@@ -135,7 +185,7 @@ swapMovie model movie newMovie =
         { model
             | layout =
                 { movies = List.Extra.replaceIf ((==) movie) newMovie model.layout.movies
-                , frames = (map (\f -> { f | mode = Showing }) frames)
+                , frames = (map (\f -> { f | mode = Showing }) model.layout.frames)
                 }
         }
 
@@ -147,12 +197,18 @@ showMenu model movie =
             model.layout
 
         index =
-            Maybe.withDefault -1 (List.Extra.findIndex ((==) movie)  model.layout.movies)
+            Maybe.withDefault -1 (List.Extra.findIndex ((==) movie) model.layout.movies)
 
         changedFrames =
             List.indexedMap
                 (\idx frame ->
-                  { frame | mode = if idx == index then Menu else Showing }
+                    { frame
+                        | mode =
+                            if idx == index then
+                                Menu
+                            else
+                                Showing
+                    }
                 )
                 model.layout.frames
     in
@@ -168,6 +224,9 @@ update action model =
         ShowMenu movie ->
             ( showMenu model movie, Cmd.none )
 
+        UrlChange location ->
+            ( model, Cmd.none )
+
 
 (//) : Int -> Int -> String
 (//) a b =
@@ -176,7 +235,7 @@ update action model =
 
 movieItem : Movie -> Movie -> Html Msg
 movieItem currentMovie subject =
-    li [onClick (Swap currentMovie subject)] [ text subject.description ]
+    li [ onClick (Swap currentMovie subject) ] [ text subject.description ]
 
 
 frameView : Frame -> Movie -> Html Msg
@@ -186,7 +245,6 @@ frameView frame currentMovie =
             video
                 [ (loop True)
                 , (onClick (ShowMenu currentMovie))
-                , (style [("max-width", "100%")])
                 , (src ("/public/" ++ currentMovie.fileName))
                 , (autoplay True)
                 ]
