@@ -1,7 +1,7 @@
 module Edges exposing (Edges, empty, insert, toPointList, single)
 
 import Dict exposing (Dict)
-import Point exposing (Point)
+import Geometry exposing (Point)
 
 
 type alias Edges =

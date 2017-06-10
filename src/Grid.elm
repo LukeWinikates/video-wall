@@ -5,7 +5,7 @@ import List.Extra exposing (zip, last)
 import Tuple exposing (second)
 import Maybe exposing (withDefault)
 import Edges exposing (Edges, insert, single, toPointList)
-import Point exposing (Point)
+import Geometry exposing (Point)
 
 
 -- TODO: change this to a record so the destrcturing isn't as painful
