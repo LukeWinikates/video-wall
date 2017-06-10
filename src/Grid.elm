@@ -8,9 +8,6 @@ import Edges exposing (Edges, insert, single, toPointList)
 import Geometry exposing (Point)
 
 
--- TODO: change this to a record so the destrcturing isn't as painful
-
-
 type alias Size =
     { height : Int
     , width : Int
