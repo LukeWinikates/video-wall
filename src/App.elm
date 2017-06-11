@@ -6,7 +6,6 @@ import Html.Events exposing (..)
 import List exposing (foldl, head, indexedMap, map, tail, take)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
-import Grid exposing (..)
 import Geometry exposing (..)
 import Navigation exposing (..)
 import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
@@ -15,59 +14,49 @@ import Movie exposing (..)
 
 -- TODO: simplify the Model: having layout nested doesn't seem to help anything
 
+-- V-1-1-4-8,H-1-4-4-11,H-4-4-7-11,V-1-11-8-14
+
+type alias GridFrame =
+  {
+    orientation: Orientation
+    , top: String
+    , bottom: String
+    , left: String
+    , right: String
+    , mode: VideoMode
+  }
+
+toOrientation : String -> Orientation
+toOrientation or = if or == "H" then
+                    Horizontal
+                else
+                    Vertical
+
+gridFrameFromStringArray : List String -> GridFrame
+gridFrameFromStringArray l =
+  case l of
+    o::t::l::b::r::[] -> { orientation = o |> toOrientation, top = t, bottom = b, left = l, right = r, mode = Showing }
+    _ -> { orientation = Vertical, top = "0", bottom = "0", left = "0", right = "0", mode = Showing}
+
+
+parseGridFrames : String -> List GridFrame
+parseGridFrames frameString =
+  String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
 
 type Route
     = LayoutsRoute (Maybe String) (Maybe String)
 
-
-sizeFromString : Char -> Scale
-sizeFromString str =
-    case str of
-        'S' ->
-            Small
-
-        'M' ->
-            Medium
-
-        _ ->
-            Large
-
-
--- TODO: extract Horizontal/Vertical string matching into its own function
-framesFromStrings : List Frame -> List Char -> List Frame
-framesFromStrings accumulator chars =
-    case chars of
-        or :: sz :: rest ->
-            { orientation =
-                if or == 'H' then
-                    Horizontal
-                else
-                    Vertical
-            , scale = sizeFromString sz
-            , mode = Showing
-            }
-                :: (framesFromStrings accumulator rest)
-
-        _ ->
-            accumulator
-
-
-(||>) : Maybe a -> (a -> b) -> Maybe b
-(||>) ma f =
-    Maybe.map f ma
-
-
-
--- TODO: address defaults
-
-
 modelFrom : Route -> Model
-modelFrom (LayoutsRoute frames movieString) =
-    { layout =
-        { frames = frames |> Maybe.withDefault "VLHLHLVL" |> String.toList |> framesFromStrings [] |> Debug.log "frames"
-        , movies = movieString ||> (String.split ",") ||> List.filterMap findById |> Maybe.withDefault []
-        }
-    }
+modelFrom (LayoutsRoute maybeFrames maybeMovies) =
+  case (maybeFrames, maybeMovies) of
+    (Just framesString, Just movieString) ->
+      { layout =
+          { frames = framesString |> parseGridFrames
+          , movies = movieString |> (String.split ",") |> List.filterMap findById
+          }
+      }
+    _ -> { layout = { frames = [], movies = []}}
+
 
 
 route : Parser (Route -> a) a
@@ -84,39 +73,12 @@ type Scale
 
 
 type alias Layout =
-    { frames : List Frame, movies : List Movie }
+    { frames : List GridFrame, movies : List Movie }
 
 
 type VideoMode
     = Menu
     | Showing
-
-
-type alias Frame =
-    { orientation : Orientation, scale : Scale, mode : VideoMode }
-
-
-frameSize : Frame -> Size
-frameSize { orientation, scale } =
-    case ( orientation, scale ) of
-        ( Vertical, Small ) ->
-            { width = 1, height = 3 }
-
-        ( Vertical, Medium ) ->
-            { width = 2, height = 5 }
-
-        ( Vertical, Large ) ->
-            { width = 3, height = 7 }
-
-        ( Horizontal, Small ) ->
-            { width = 3, height = 1 }
-
-        ( Horizontal, Medium ) ->
-            { width = 5, height = 2 }
-
-        ( Horizontal, Large ) ->
-            { width = 7, height = 3 }
-
 
 main =
     Navigation.program UrlChange
@@ -190,30 +152,20 @@ showMenu model index =
         { model | layout = { layout | frames = changedFrames } }
 
 
-frameToString : Frame -> String
-frameToString frame =
-    (case frame.orientation of
+frameToString : GridFrame -> String
+frameToString { orientation, top, left, bottom, right } =
+    [(case orientation of
         Horizontal ->
             "H"
 
         Vertical ->
             "V"
-    )
-        ++ (case frame.scale of
-                Small ->
-                    "S"
-
-                Medium ->
-                    "M"
-
-                Large ->
-                    "L"
-           )
+    ), top, left, bottom, right] |> String.join "-"
 
 
-framesUrlString : List Frame -> String
+framesUrlString : List GridFrame -> String
 framesUrlString frames =
-    frames |> List.map frameToString |> List.foldl (++) ""
+    frames |> List.map frameToString |> String.join ","
 
 
 toUrl : Model -> String
@@ -238,9 +190,9 @@ update action model =
                 ( model, Cmd.none )
 
 
-(//) : Int -> Int -> String
+(//) : String -> String -> String
 (//) a b =
-    toString a ++ "/" ++ toString b
+    a ++ "/" ++ b
 
 
 movieItem : Int -> Movie -> Html Msg
@@ -248,7 +200,7 @@ movieItem index subject =
     li [ onClick (Swap index subject) ] [ text subject.description ]
 
 
-frameView : Frame -> Int -> Movie -> Html Msg
+frameView : GridFrame -> Int -> Movie -> Html Msg
 frameView frame index movie =
     case frame.mode of
         Showing ->
@@ -264,46 +216,34 @@ frameView frame index movie =
             ul [] (map (movieItem index) (byOrientation movie.orientation))
 
 
-movieView : Int -> ( Movie, ( Frame, GridRectangle ) ) -> Html Msg
-movieView index ( movie, ( frame, gridRectangle ) ) =
+movieView : Int -> ( Movie, GridFrame ) -> Html Msg
+movieView index ( movie, gridFrame ) =
     div
         [ (style
-            [ ( "grid-row", gridRectangle.topRow // gridRectangle.bottomRow )
-            , ( "grid-column", gridRectangle.leftColumn // gridRectangle.rightColumn )
+            [ ( "grid-row", gridFrame.top // gridFrame.bottom )
+            , ( "grid-column", gridFrame.left // gridFrame.right )
             , ( "background-color", "#3A3238" )
-            , ("border-radius", "2px")
+            , ( "border-radius", "2px")
             , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
             ]
           )
         ]
-        [ frameView frame index movie ]
-
-
-makeGrid =
-    Grid.forType frameSize
-
+        [ frameView gridFrame index movie ]
 
 
 -- TODO: make the grid actually work -- right now the videos are just full size, really.
--- TODO: more layouts
--- TODO: layouts that allow stacking of wider elements and can fill in the space properly... going to be hard
-
 
 view : Model -> Html Msg
 view model =
-    let
-        grid =
-            appendAll (makeGrid { width = 24, height = 9 }) model.layout.frames
-    in
-        div
-            [ (style
-                [ ( "display", "grid" )
-                , ( "grid-gap", "10px" )
-                , ( "background-color", "#636B61" )
-                , ( "justify-items", "center" )
-                , ( "align-items", "center" )
-                ]
-              )
-            ]
-            (indexedMap movieView (zip model.layout.movies grid.items))
+      div
+          [ (style
+              [ ( "display", "grid" )
+              , ( "grid-gap", "10px" )
+              , ( "background-color", "#636B61" )
+              , ( "justify-items", "center" )
+              , ( "align-items", "center" )
+              ]
+            )
+          ]
+          (indexedMap movieView (zip model.layout.movies model.layout.frames))
