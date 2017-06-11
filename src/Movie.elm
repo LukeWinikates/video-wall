@@ -31,7 +31,7 @@ movies =
     , { fileName = "IMG_6230.m4v", orientation = Horizontal, description = "Green water with log in foreground" }
     , { fileName = "IMG_6213.m4v", orientation = Vertical, description = "Long distance across open river" }
     , { fileName = "IMG_6214.m4v", orientation = Vertical, description = "Upriver through trees" }
-    , { fileName = "IMG_6219.m4v", orientation = Vertical, description = "Upriver from on top of log" }
+    , { fileName = "IMG_6219.m4v", orientation = Horizontal, description = "Upriver from on top of log" }
     , { fileName = "IMG_6227.m4v", orientation = Horizontal, description = "Looking down into jade water" }
     , { fileName = "IMG_6231.m4v", orientation = Vertical, description = "Just woods" }
     , { fileName = "IMG_6244.m4v", orientation = Vertical, description = "Looking down into water channel" }
