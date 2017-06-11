@@ -13,8 +13,7 @@ import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
 
 
--- TODO: make movie changes correctly effect the url
--- TODO: simpliy the Model... model considerably
+-- TODO: simplify the Model: having layout nested doesn't seem to help anything
 
 
 type Route
@@ -34,6 +33,7 @@ sizeFromString str =
             Large
 
 
+-- TODO: extract Horizontal/Vertical string matching into its own function
 framesFromStrings : List Frame -> List Char -> List Frame
 framesFromStrings accumulator chars =
     case chars of
@@ -57,7 +57,10 @@ framesFromStrings accumulator chars =
     Maybe.map f ma
 
 
+
 -- TODO: address defaults
+
+
 modelFrom : Route -> Model
 modelFrom (LayoutsRoute frames movieString) =
     { layout =
@@ -130,7 +133,7 @@ type alias Model =
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( (parseHash route location) |> Debug.log "stuff" |> Maybe.withDefault (LayoutsRoute Nothing Nothing) |> modelFrom
+    ( (parseHash route location) |> Maybe.withDefault (LayoutsRoute Nothing Nothing) |> modelFrom
     , Cmd.none
     )
 
@@ -163,7 +166,7 @@ swapMovie model index newMovie =
     in
         { model
             | layout =
-                { layout | movies = (List.Extra.setAt (Debug.log "index" index) newMovie layout.movies) |> Maybe.withDefault model.layout.movies }
+                { layout | movies = (List.Extra.setAt index newMovie layout.movies) |> Maybe.withDefault model.layout.movies }
         }
             |> showAllMovies
 
@@ -187,17 +190,52 @@ showMenu model index =
         { model | layout = { layout | frames = changedFrames } }
 
 
+frameToString : Frame -> String
+frameToString frame =
+    (case frame.orientation of
+        Horizontal ->
+            "H"
+
+        Vertical ->
+            "V"
+    )
+        ++ (case frame.scale of
+                Small ->
+                    "S"
+
+                Medium ->
+                    "M"
+
+                Large ->
+                    "L"
+           )
+
+
+framesUrlString : List Frame -> String
+framesUrlString frames =
+    frames |> List.map frameToString |> List.foldl (++) ""
+
+
+toUrl : Model -> String
+toUrl model =
+    "?frames=" ++ (framesUrlString model.layout.frames) ++ "&movies=" ++ (model.layout.movies |> List.map Movie.id |> String.join ",")
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
-    case action of
-        Swap movie newMovie ->
-            ( (swapMovie model movie newMovie), Cmd.none )
+    let
+        wrap model =
+            ( model, model |> toUrl |> Navigation.modifyUrl )
+    in
+        case action of
+            Swap movie newMovie ->
+                wrap (swapMovie model movie newMovie)
 
-        ShowMenu index ->
-            ( showMenu model index, Cmd.none )
+            ShowMenu index ->
+                wrap (showMenu model index)
 
-        UrlChange location ->
-            ( model, Cmd.none )
+            UrlChange location ->
+                ( model, Cmd.none )
 
 
 (//) : Int -> Int -> String
@@ -245,7 +283,7 @@ makeGrid =
 
 
 
--- TODO: 24 9 is a pretty random gridsize.
+-- TODO: make the grid actually work -- right now the videos are just full size, really.
 -- TODO: more layouts
 -- TODO: layouts that allow stacking of wider elements and can fill in the space properly... going to be hard
 

@@ -1,7 +1,10 @@
-module Movie exposing (Movie, byOrientation, findById)
+module Movie exposing (Movie, byOrientation, findById, id)
 
 import Geometry exposing (..)
 import List
+
+
+-- TODO: make fileName (or path) a function, rather than munging filename to get id
 
 
 type alias Movie =
@@ -14,6 +17,11 @@ type alias Movie =
 byOrientation : Orientation -> List Movie
 byOrientation orientation =
     List.filter (\m -> (m.orientation == orientation)) movies |> Debug.log "movie"
+
+
+id : Movie -> String
+id movie =
+    String.slice 4 8 movie.fileName
 
 
 movies : List Movie
