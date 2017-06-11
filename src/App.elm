@@ -270,8 +270,10 @@ movieView index ( movie, ( frame, gridRectangle ) ) =
         [ (style
             [ ( "grid-row", gridRectangle.topRow // gridRectangle.bottomRow )
             , ( "grid-column", gridRectangle.leftColumn // gridRectangle.rightColumn )
-            , ( "background-color", "#ccc" )
+            , ( "background-color", "#3A3238" )
+            , ("border-radius", "2px")
             , ( "padding", "5px" )
+            , ( "box-sizing", "border-box" )
             ]
           )
         ]
@@ -298,7 +300,7 @@ view model =
             [ (style
                 [ ( "display", "grid" )
                 , ( "grid-gap", "10px" )
-                , ( "max-width", "90vw" )
+                , ( "background-color", "#636B61" )
                 , ( "justify-items", "center" )
                 , ( "align-items", "center" )
                 ]
