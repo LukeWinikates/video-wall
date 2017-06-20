@@ -14,7 +14,7 @@ import Movie exposing (..)
 
 -- TODO: simplify the Model: having layout nested doesn't seem to help anything
 -- V-2-1-8-5-6259,H-1-5-6-12-6219,H-6-5-10-12-6259,V-2-12-8-16-6260
-
+-- TODO: fix typeography of the clickable movie list
 type alias GridMovie =
     { orientation : Orientation
     , top : Int
@@ -35,7 +35,7 @@ toOrientation or =
         _ ->
             Vertical
 
-
+-- TODO: try using a Parser generator? This is pretty nasty
 gridFrameFromStringArray : List String -> GridMovie
 gridFrameFromStringArray list =
     case drop 1 list |> take 4 |> List.map String.toInt of
@@ -57,7 +57,7 @@ parseGridFrames : String -> List GridMovie
 parseGridFrames frameString =
     String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
 
-
+-- TODO: is this actually needed?
 type Route
     = LayoutsRoute (Maybe String)
 
