@@ -13,16 +13,16 @@ import Movie exposing (..)
 
 
 -- TODO: simplify the Model: having layout nested doesn't seem to help anything
--- V-1-1-4-8,H-1-4-4-11,H-4-4-7-11,V-1-11-8-14
+-- V-2-1-8-5-6259,H-1-5-6-12-6219,H-6-5-10-12-6259,V-2-12-8-16-6260
 
-
-type alias GridFrame =
+type alias GridMovie =
     { orientation : Orientation
     , top : Int
     , bottom : Int
     , left : Int
     , right : Int
     , mode : VideoMode
+    , movie : Maybe Movie
     }
 
 
@@ -36,43 +36,49 @@ toOrientation or =
             Vertical
 
 
-gridFrameFromStringArray : List String -> GridFrame
+gridFrameFromStringArray : List String -> GridMovie
 gridFrameFromStringArray list =
-    case drop 1 list |> List.map String.toInt of
+    case drop 1 list |> take 4 |> List.map String.toInt of
         (Ok t) :: (Ok l) :: (Ok b) :: (Ok r) :: [] ->
-            { orientation = head list |> toOrientation, top = t, bottom = b, left = l, right = r, mode = Showing }
+            { orientation = head list |> toOrientation,
+            top = t,
+            bottom = b,
+            left = l,
+            right = r,
+            mode = Showing,
+            movie = List.Extra.last list |> Maybe.andThen findById
+            }
 
         _ ->
-            { orientation = Vertical, top = 0, bottom = 0, left = 0, right = 0, mode = Showing }
+            { orientation = Vertical, top = 0, bottom = 0, left = 0, right = 0, mode = Showing, movie = Nothing }
 
 
-parseGridFrames : String -> List GridFrame
+parseGridFrames : String -> List GridMovie
 parseGridFrames frameString =
     String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
 
 
 type Route
-    = LayoutsRoute (Maybe String) (Maybe String)
+    = LayoutsRoute (Maybe String)
 
 
 modelFrom : Route -> Model
-modelFrom (LayoutsRoute maybeFrames maybeMovies) =
-    case ( maybeFrames, maybeMovies ) of
-        ( Just framesString, Just movieString ) ->
+modelFrom (LayoutsRoute maybeMovies) =
+    case (maybeMovies ) of
+        ( Just movieString ) ->
             { layout =
-                { frames = framesString |> parseGridFrames
-                , movies = movieString |> (String.split ",") |> List.filterMap findById
+                { movies = movieString |> parseGridFrames
                 }
             }
 
         _ ->
-            { layout = { frames = [], movies = [] } }
+            { layout = { movies = [] } }
 
 
 route : Parser (Route -> a) a
 route =
     oneOf
-        [ UrlParser.map LayoutsRoute (top <?> stringParam "frames" <?> stringParam "movies")
+        [ UrlParser.map LayoutsRoute (top <?> stringParam "movies")
         ]
 
 
@@ -83,7 +89,7 @@ type Scale
 
 
 type alias Layout =
-    { frames : List GridFrame, movies : List Movie }
+    { movies : List GridMovie }
 
 
 type VideoMode
@@ -106,7 +112,7 @@ type alias Model =
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( (parseHash route location) |> Maybe.withDefault (LayoutsRoute Nothing Nothing) |> modelFrom
+    ( (parseHash route location) |> Maybe.withDefault (LayoutsRoute Nothing) |> modelFrom
     , Cmd.none
     )
 
@@ -126,7 +132,7 @@ showAllMovies model =
         { model
             | layout =
                 { layout
-                    | frames = (map (\f -> { f | mode = Showing }) model.layout.frames)
+                    | movies = (map (\f -> { f | mode = Showing }) model.layout.movies)
                 }
         }
 
@@ -139,7 +145,7 @@ swapMovie model index newMovie =
     in
         { model
             | layout =
-                { layout | movies = (List.Extra.setAt index newMovie layout.movies) |> Maybe.withDefault model.layout.movies }
+                { layout | movies = (List.Extra.updateAt index (\m -> { m | movie = Just newMovie}) layout.movies) |> Maybe.withDefault model.layout.movies }
         }
             |> showAllMovies
 
@@ -157,14 +163,14 @@ showMenu model index =
                         | mode = Menu
                     }
                 )
-                model.layout.frames
-                |> Maybe.withDefault model.layout.frames
+                model.layout.movies
+                |> Maybe.withDefault model.layout.movies
     in
-        { model | layout = { layout | frames = changedFrames } }
+        { model | layout = { layout | movies = changedFrames } }
 
 
-frameToString : GridFrame -> String
-frameToString { orientation, top, left, bottom, right } =
+frameToString : GridMovie -> String
+frameToString { orientation, top, left, bottom, right, movie } =
     [ (case orientation of
         Horizontal ->
             "H"
@@ -176,18 +182,19 @@ frameToString { orientation, top, left, bottom, right } =
     , toString left
     , toString bottom
     , toString right
+    , Maybe.map Movie.id movie |> Maybe.withDefault "N"
     ]
         |> String.join "-"
 
 
-framesUrlString : List GridFrame -> String
+framesUrlString : List GridMovie -> String
 framesUrlString frames =
     frames |> List.map frameToString |> String.join ","
 
 
 toUrl : Model -> String
 toUrl model =
-    "?frames=" ++ (framesUrlString model.layout.frames) ++ "&movies=" ++ (model.layout.movies |> List.map Movie.id |> String.join ",")
+    "?movies==" ++ (framesUrlString model.layout.movies)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -212,16 +219,16 @@ movieItem index subject =
     li [ onClick (Swap index subject) ] [ text subject.description ]
 
 
-frameView : GridFrame -> Int -> Movie -> Html Msg
-frameView frame index movie =
-    case frame.mode of
-        Showing ->
+frameView : GridMovie -> Int -> Html Msg
+frameView gridMovie index =
+    case (gridMovie.mode, gridMovie.movie) of
+        (Showing, Just movie) ->
             video
                 [ (loop True)
                 , (onClick (ShowMenu index))
                 , (src ("/public/" ++ movie.fileName))
                 , (style
-                    [ ( case frame.orientation of
+                    [ ( case gridMovie.orientation of
                             Horizontal ->
                                 "max-height"
 
@@ -237,8 +244,8 @@ frameView frame index movie =
                 ]
                 []
 
-        Menu ->
-            ul [] (map (movieItem index) (byOrientation movie.orientation))
+        _ ->
+            ul [] (map (movieItem index) (byOrientation gridMovie.orientation))
 
 
 (+++) : number -> String -> String
@@ -256,28 +263,23 @@ vhGrid i =
     ((toFloat i / 9) * 100) +++ "vh"
 
 
-movieView : Int -> ( Movie, GridFrame ) -> Html Msg
-movieView index ( movie, gridFrame ) =
+movieView : Int -> GridMovie -> Html Msg
+movieView index gridMovie =
     div
         [ (style
             [ ( "position", "absolute" )
-            , ( "left", vwGrid (gridFrame.left - 1) )
-            , ( "width", vwGrid (gridFrame.right - gridFrame.left) )
-            , ( "top", vhGrid (gridFrame.top - 1) )
-            , ( "height", vhGrid (gridFrame.bottom - gridFrame.top) )
+            , ( "left", vwGrid (gridMovie.left - 1) )
+            , ( "width", vwGrid (gridMovie.right - gridMovie.left) )
+            , ( "top", vhGrid (gridMovie.top - 1) )
+            , ( "height", vhGrid (gridMovie.bottom - gridMovie.top) )
             , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
             ]
           )
         ]
-        [ frameView gridFrame index movie ]
+        [ frameView gridMovie index ]
 
-
-
--- TODO: make the grid actually work -- right now the videos are just full size, really.
--- TODO: seems like time to try abandoning CSS grid and absolutely positioning everything
--- the bummer is that means probably deciding on a fixed grid size and calculating fractional viewport widths, but I think I'm really not understanding CSS grid
 
 
 view : Model -> Html Msg
@@ -299,5 +301,5 @@ view model =
                 ]
               )
             ]
-            (indexedMap movieView (zip model.layout.movies model.layout.frames))
+            (indexedMap movieView model.layout.movies)
         ]
