@@ -1,9 +1,9 @@
 module App exposing (..)
 
-import Html exposing (Html, div, li, text, ul, video)
+import Html exposing (Html, b, div, li, text, ul, video, body)
 import Html.Attributes exposing (autoplay, height, loop, src, style)
 import Html.Events exposing (..)
-import List exposing (foldl, head, indexedMap, map, tail, take)
+import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import List.Extra exposing (zip, last)
 import Tuple exposing (second)
 import Geometry exposing (..)
@@ -13,50 +13,60 @@ import Movie exposing (..)
 
 
 -- TODO: simplify the Model: having layout nested doesn't seem to help anything
-
 -- V-1-1-4-8,H-1-4-4-11,H-4-4-7-11,V-1-11-8-14
 
-type alias GridFrame =
-  {
-    orientation: Orientation
-    , top: String
-    , bottom: String
-    , left: String
-    , right: String
-    , mode: VideoMode
-  }
 
-toOrientation : String -> Orientation
-toOrientation or = if or == "H" then
-                    Horizontal
-                else
-                    Vertical
+type alias GridFrame =
+    { orientation : Orientation
+    , top : Int
+    , bottom : Int
+    , left : Int
+    , right : Int
+    , mode : VideoMode
+    }
+
+
+toOrientation : Maybe String -> Orientation
+toOrientation or =
+    case or of
+        Just "H" ->
+            Horizontal
+
+        _ ->
+            Vertical
+
 
 gridFrameFromStringArray : List String -> GridFrame
-gridFrameFromStringArray l =
-  case l of
-    o::t::l::b::r::[] -> { orientation = o |> toOrientation, top = t, bottom = b, left = l, right = r, mode = Showing }
-    _ -> { orientation = Vertical, top = "0", bottom = "0", left = "0", right = "0", mode = Showing}
+gridFrameFromStringArray list =
+    case drop 1 list |> List.map String.toInt of
+        (Ok t) :: (Ok l) :: (Ok b) :: (Ok r) :: [] ->
+            { orientation = head list |> toOrientation, top = t, bottom = b, left = l, right = r, mode = Showing }
+
+        _ ->
+            { orientation = Vertical, top = 0, bottom = 0, left = 0, right = 0, mode = Showing }
 
 
 parseGridFrames : String -> List GridFrame
 parseGridFrames frameString =
-  String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
+    String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
+
 
 type Route
     = LayoutsRoute (Maybe String) (Maybe String)
 
+
 modelFrom : Route -> Model
 modelFrom (LayoutsRoute maybeFrames maybeMovies) =
-  case (maybeFrames, maybeMovies) of
-    (Just framesString, Just movieString) ->
-      { layout =
-          { frames = framesString |> parseGridFrames
-          , movies = movieString |> (String.split ",") |> List.filterMap findById
-          }
-      }
-    _ -> { layout = { frames = [], movies = []}}
+    case ( maybeFrames, maybeMovies ) of
+        ( Just framesString, Just movieString ) ->
+            { layout =
+                { frames = framesString |> parseGridFrames
+                , movies = movieString |> (String.split ",") |> List.filterMap findById
+                }
+            }
 
+        _ ->
+            { layout = { frames = [], movies = [] } }
 
 
 route : Parser (Route -> a) a
@@ -79,6 +89,7 @@ type alias Layout =
 type VideoMode
     = Menu
     | Showing
+
 
 main =
     Navigation.program UrlChange
@@ -154,13 +165,19 @@ showMenu model index =
 
 frameToString : GridFrame -> String
 frameToString { orientation, top, left, bottom, right } =
-    [(case orientation of
+    [ (case orientation of
         Horizontal ->
             "H"
 
         Vertical ->
             "V"
-    ), top, left, bottom, right] |> String.join "-"
+      )
+    , toString top
+    , toString left
+    , toString bottom
+    , toString right
+    ]
+        |> String.join "-"
 
 
 framesUrlString : List GridFrame -> String
@@ -208,6 +225,19 @@ frameView frame index movie =
                 [ (loop True)
                 , (onClick (ShowMenu index))
                 , (src ("/public/" ++ movie.fileName))
+                , (style
+                    [ ( case frame.orientation of
+                            Horizontal ->
+                                "max-height"
+
+                            Vertical ->
+                                "max-width"
+                      , "100%"
+                      )
+                    , ( "border", "10px solid #3A3238" )
+                    , ( "border-radius", "2px" )
+                    ]
+                  )
                 , (autoplay True)
                 ]
                 []
@@ -216,34 +246,60 @@ frameView frame index movie =
             ul [] (map (movieItem index) (byOrientation movie.orientation))
 
 
+(+++) : number -> String -> String
+(+++) i s =
+    (toString i) ++ s
+
+
+vwGrid : Int -> String
+vwGrid i =
+    ((toFloat i / 16) * 100) +++ "vw"
+
+
+vhGrid : Int -> String
+vhGrid i =
+    ((toFloat i / 9) * 100) +++ "vh"
+
+
 movieView : Int -> ( Movie, GridFrame ) -> Html Msg
 movieView index ( movie, gridFrame ) =
     div
         [ (style
-            [ ( "grid-row", gridFrame.top // gridFrame.bottom )
-            , ( "grid-column", gridFrame.left // gridFrame.right )
-            , ( "background-color", "#3A3238" )
-            , ( "border-radius", "2px")
+            [ ( "position", "absolute" )
+            , ( "left", vwGrid (gridFrame.left - 1) )
+            , ( "width", vwGrid (gridFrame.right - gridFrame.left) )
+            , ( "top", vhGrid (gridFrame.top - 1) )
+            , ( "height", vhGrid (gridFrame.bottom - gridFrame.top) )
             , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
+            , ( "text-align", "center" )
             ]
           )
         ]
         [ frameView gridFrame index movie ]
 
 
+
 -- TODO: make the grid actually work -- right now the videos are just full size, really.
+-- TODO: seems like time to try abandoning CSS grid and absolutely positioning everything
+-- the bummer is that means probably deciding on a fixed grid size and calculating fractional viewport widths, but I think I'm really not understanding CSS grid
+
 
 view : Model -> Html Msg
 view model =
-      div
-          [ (style
-              [ ( "display", "grid" )
-              , ( "grid-gap", "10px" )
-              , ( "background-color", "#636B61" )
-              , ( "justify-items", "center" )
-              , ( "align-items", "center" )
-              ]
-            )
-          ]
-          (indexedMap movieView (zip model.layout.movies model.layout.frames))
+    body
+        [ (style
+            []
+          )
+        ]
+        [ div
+            [ (style
+                [ ( "display", "absolute" )
+                , ( "height", "100vh" )
+                , ( "width", "100vw" )
+                , ( "background-color", "#636B61" )
+                ]
+              )
+            ]
+            (indexedMap movieView (zip model.layout.movies model.layout.frames))
+        ]
