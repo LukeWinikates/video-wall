@@ -298,6 +298,9 @@ view model =
                 , ( "height", "100vh" )
                 , ( "width", "100vw" )
                 , ( "background-color", "#636B61" )
+                , ( "display", "flex" )
+                , ( "justify-content", "center" )
+                , ( "align-items", "center" )
                 ]
               )
             ]
