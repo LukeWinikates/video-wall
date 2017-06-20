@@ -207,11 +207,6 @@ update action model =
                 ( model, Cmd.none )
 
 
-(//) : String -> String -> String
-(//) a b =
-    a ++ "/" ++ b
-
-
 movieItem : Int -> Movie -> Html Msg
 movieItem index subject =
     li [ onClick (Swap index subject) ] [ text subject.description ]
