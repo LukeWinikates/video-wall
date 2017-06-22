@@ -12,9 +12,10 @@ import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
 
 
--- TODO: simplify the Model: having layout nested doesn't seem to help anything
 -- V-2-1-8-5-6259,H-1-5-6-12-6219,H-6-5-10-12-6259,V-2-12-8-16-6260
 -- TODO: fix typeography of the clickable movie list
+
+
 type alias GridMovie =
     { orientation : Orientation
     , top : Int
@@ -35,18 +36,22 @@ toOrientation or =
         _ ->
             Vertical
 
+
+
 -- TODO: try using a Parser generator? This is pretty nasty
+
+
 gridFrameFromStringArray : List String -> GridMovie
 gridFrameFromStringArray list =
     case drop 1 list |> take 4 |> List.map String.toInt of
         (Ok t) :: (Ok l) :: (Ok b) :: (Ok r) :: [] ->
-            { orientation = head list |> toOrientation,
-            top = t,
-            bottom = b,
-            left = l,
-            right = r,
-            mode = Showing,
-            movie = List.Extra.last list |> Maybe.andThen findById
+            { orientation = head list |> toOrientation
+            , top = t
+            , bottom = b
+            , left = l
+            , right = r
+            , mode = Showing
+            , movie = List.Extra.last list |> Maybe.andThen findById
             }
 
         _ ->
@@ -57,22 +62,24 @@ parseGridFrames : String -> List GridMovie
 parseGridFrames frameString =
     String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
 
+
+
 -- TODO: is this actually needed?
+
+
 type Route
     = LayoutsRoute (Maybe String)
 
 
 modelFrom : Route -> Model
 modelFrom (LayoutsRoute maybeMovies) =
-    case (maybeMovies ) of
-        ( Just movieString ) ->
-            { layout =
-                { movies = movieString |> parseGridFrames
-                }
+    case (maybeMovies) of
+        Just movieString ->
+            { movies = movieString |> parseGridFrames
             }
 
         _ ->
-            { layout = { movies = [] } }
+            { movies = [] }
 
 
 route : Parser (Route -> a) a
@@ -86,10 +93,6 @@ type Scale
     = Small
     | Medium
     | Large
-
-
-type alias Layout =
-    { movies : List GridMovie }
 
 
 type VideoMode
@@ -107,7 +110,7 @@ main =
 
 
 type alias Model =
-    { layout : Layout }
+    { movies : List GridMovie }
 
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -125,48 +128,32 @@ type Msg
 
 showAllMovies : Model -> Model
 showAllMovies model =
-    let
-        layout =
-            model.layout
-    in
-        { model
-            | layout =
-                { layout
-                    | movies = (map (\f -> { f | mode = Showing }) model.layout.movies)
-                }
-        }
+    { model
+        | movies = (map (\f -> { f | mode = Showing }) model.movies)
+    }
 
 
 swapMovie : Model -> Int -> Movie -> Model
 swapMovie model index newMovie =
-    let
-        layout =
-            model.layout
-    in
-        { model
-            | layout =
-                { layout | movies = (List.Extra.updateAt index (\m -> { m | movie = Just newMovie}) layout.movies) |> Maybe.withDefault model.layout.movies }
-        }
-            |> showAllMovies
+    { model
+        | movies = (List.Extra.updateAt index (\m -> { m | movie = Just newMovie }) model.movies) |> Maybe.withDefault model.movies
+    }
+        |> showAllMovies
 
 
 showMenu : Model -> Int -> Model
 showMenu model index =
-    let
-        layout =
-            model.layout
-
-        changedFrames =
+    { model
+        | movies =
             List.Extra.updateAt index
                 (\frame ->
                     { frame
                         | mode = Menu
                     }
                 )
-                model.layout.movies
-                |> Maybe.withDefault model.layout.movies
-    in
-        { model | layout = { layout | movies = changedFrames } }
+                model.movies
+                |> Maybe.withDefault model.movies
+    }
 
 
 frameToString : GridMovie -> String
@@ -194,7 +181,7 @@ framesUrlString frames =
 
 toUrl : Model -> String
 toUrl model =
-    "?movies==" ++ (framesUrlString model.layout.movies)
+    "?movies==" ++ (framesUrlString model.movies)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -221,8 +208,8 @@ movieItem index subject =
 
 frameView : GridMovie -> Int -> Html Msg
 frameView gridMovie index =
-    case (gridMovie.mode, gridMovie.movie) of
-        (Showing, Just movie) ->
+    case ( gridMovie.mode, gridMovie.movie ) of
+        ( Showing, Just movie ) ->
             video
                 [ (loop True)
                 , (onClick (ShowMenu index))
@@ -281,7 +268,6 @@ movieView index gridMovie =
         [ frameView gridMovie index ]
 
 
-
 view : Model -> Html Msg
 view model =
     body
@@ -301,5 +287,5 @@ view model =
                 ]
               )
             ]
-            (indexedMap movieView model.layout.movies)
+            (indexedMap movieView model.movies)
         ]
