@@ -5,14 +5,15 @@ import Html.Attributes exposing (autoplay, height, loop, src, style)
 import Html.Events exposing (..)
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import List.Extra exposing (zip, last)
+import Maybe exposing (withDefault)
 import Tuple exposing (second)
 import Geometry exposing (..)
 import Navigation exposing (..)
 import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
+import MovieParser exposing (..)
 
 
--- V-2-1-8-5-6259,H-1-5-6-12-6219,H-6-5-10-12-6259,V-2-12-8-16-6260
 -- TODO: fix typeography of the clickable movie list
 
 
@@ -27,40 +28,26 @@ type alias GridMovie =
     }
 
 
-toOrientation : Maybe String -> Orientation
-toOrientation or =
-    case or of
-        Just "H" ->
-            Horizontal
-
-        _ ->
-            Vertical
+resultToMaybe : Result a b -> Maybe b
+resultToMaybe =
+    Result.map Just >> Result.withDefault Nothing
 
 
-
--- TODO: try using a Parser generator? This is pretty nasty
-
-
-gridFrameFromStringArray : List String -> GridMovie
-gridFrameFromStringArray list =
-    case drop 1 list |> take 4 |> List.map String.toInt of
-        (Ok t) :: (Ok l) :: (Ok b) :: (Ok r) :: [] ->
-            { orientation = head list |> toOrientation
-            , top = t
-            , bottom = b
-            , left = l
-            , right = r
-            , mode = Showing
-            , movie = List.Extra.last list |> Maybe.andThen findById
-            }
-
-        _ ->
-            { orientation = Vertical, top = 0, bottom = 0, left = 0, right = 0, mode = Showing, movie = Nothing }
+hydrate : MovieDefinition -> GridMovie
+hydrate definition =
+    { orientation = definition.orientation
+    , top = definition.top
+    , bottom = definition.bottom
+    , left = definition.left
+    , right = definition.right
+    , movie = Movie.findById definition.movieId
+    , mode = Showing
+    }
 
 
 parseGridFrames : String -> List GridMovie
-parseGridFrames frameString =
-    String.split "," frameString |> List.map (String.split "-") |> List.map gridFrameFromStringArray
+parseGridFrames =
+    String.split "," >> List.filterMap (MovieParser.parseMovie >> resultToMaybe) >> List.map hydrate
 
 
 
@@ -181,7 +168,7 @@ framesUrlString frames =
 
 toUrl : Model -> String
 toUrl model =
-    "?movies==" ++ (framesUrlString model.movies)
+    "?movies=" ++ (framesUrlString model.movies)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
