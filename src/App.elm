@@ -156,7 +156,7 @@ frameToString { orientation, top, left, bottom, right, movie } =
     , toString left
     , toString bottom
     , toString right
-    , Maybe.map Movie.id movie |> Maybe.withDefault "N"
+    , Maybe.map .id movie |> Maybe.withDefault "N"
     ]
         |> String.join "-"
 
@@ -200,7 +200,7 @@ frameView gridMovie index =
             video
                 [ (loop True)
                 , (onClick (ShowMenu index))
-                , (src ("/public/" ++ movie.fileName))
+                , (src ("/public/" ++ (fileName movie)))
                 , (style
                     [ ( case gridMovie.orientation of
                             Horizontal ->
