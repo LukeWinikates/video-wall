@@ -1,6 +1,6 @@
 module App exposing (..)
 
-import Html exposing (Html, a, b, body, div, li, text, ul, video)
+import Html exposing (Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (autoplay, height, href, loop, src, style)
 import Html.Events exposing (..)
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
@@ -103,6 +103,22 @@ type Msg
     = ShowMenu Int
     | Swap Int Movie
     | UrlChange Navigation.Location
+    | Resize ResizeAction Int
+    | Move MoveDirection Int
+
+
+type MoveDirection
+    = Left
+    | Right
+    | Up
+    | Down
+
+
+type ResizeAction
+    = Wider
+    | Narrower
+    | Taller
+    | Shorter
 
 
 showAllMovies : Model -> Model
@@ -163,6 +179,52 @@ toUrl model =
     "?movies=" ++ (framesUrlString model.movies)
 
 
+resizeMovie : ResizeAction -> GridMovie -> GridMovie
+resizeMovie action gridMovie =
+    case action of
+        Wider ->
+            { gridMovie | right = gridMovie.right + 1 }
+
+        Narrower ->
+            { gridMovie | right = gridMovie.right - 1 }
+
+        Taller ->
+            { gridMovie | bottom = gridMovie.bottom + 1 }
+
+        Shorter ->
+            { gridMovie | bottom = gridMovie.bottom - 1 }
+
+
+repositionMovie : MoveDirection -> GridMovie -> GridMovie
+repositionMovie direction gridMovie =
+    case direction of
+        Up ->
+            { gridMovie | top = gridMovie.top - 1, bottom = gridMovie.bottom - 1 }
+
+        Down ->
+            { gridMovie | top = gridMovie.top + 1, bottom = gridMovie.bottom + 1 }
+
+        Left ->
+            { gridMovie | left = gridMovie.left - 1, right = gridMovie.right - 1 }
+
+        Right ->
+            { gridMovie | left = gridMovie.left + 1, right = gridMovie.right + 1 }
+
+
+move : MoveDirection -> Int -> Model -> Model
+move direction index model =
+    { model
+        | movies = (List.Extra.updateAt index (repositionMovie direction) model.movies) |> Maybe.withDefault model.movies
+    }
+
+
+resize : ResizeAction -> Int -> Model -> Model
+resize action index model =
+    { model
+        | movies = (List.Extra.updateAt index (resizeMovie action) model.movies) |> Maybe.withDefault model.movies
+    }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
@@ -170,11 +232,17 @@ update action model =
             ( model, model |> toUrl |> Navigation.modifyUrl )
     in
         case action of
-            Swap movie newMovie ->
-                wrap (swapMovie model movie newMovie)
+            Swap index newMovie ->
+                wrap (swapMovie model index newMovie)
 
             ShowMenu index ->
                 wrap (showMenu model index)
+
+            Resize action index ->
+                wrap (resize action index model)
+
+            Move direction index ->
+                wrap (move direction index model)
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -185,31 +253,46 @@ movieItem index subject =
     li [ (style [ ( "padding", "4px" ) ]) ] [ a [ onClick (Swap index subject), (href "#"), (style [ ( "color", colors.thunder ), ( "font-size", "18px" ) ]) ] [ text subject.description ] ]
 
 
+changeButton : Msg -> String -> Html Msg
+changeButton msg t =
+    button [ (onClick msg) ] [ (text t) ]
+
+
 frameView : GridMovie -> Int -> Html Msg
 frameView gridMovie index =
     case ( gridMovie.mode, gridMovie.movie ) of
         ( Showing, Just movie ) ->
-            video
-                [ (loop True)
-                , (onClick (ShowMenu index))
-                , (src ("/public/" ++ (fileName movie)))
-                , (style
-                    [ ( case gridMovie.orientation of
-                            Horizontal ->
-                                "max-height"
+            div []
+                [ video
+                    [ (loop True)
+                    , (onClick (ShowMenu index))
+                    , (src ("/public/" ++ (fileName movie)))
+                    , (style
+                        [ ( case gridMovie.orientation of
+                                Horizontal ->
+                                    "max-height"
 
-                            Vertical ->
-                                "max-width"
-                      , "100%"
+                                Vertical ->
+                                    "max-width"
+                          , "100%"
+                          )
+                        , ( "border", "10px solid " ++ colors.thunder )
+                        , ( "border-radius", "2px" )
+                        , ( "margin", "auto" )
+                        ]
                       )
-                    , ( "border", "10px solid " ++ colors.thunder )
-                    , ( "border-radius", "2px" )
-                    , ( "margin", "auto" )
+                    , (autoplay True)
                     ]
-                  )
-                , (autoplay True)
+                    []
+                , changeButton (Move Up index) "^"
+                , changeButton (Move Down index) "v"
+                , changeButton (Move Left index) "<"
+                , changeButton (Move Right index) ">"
+                , changeButton (Resize Taller index) "++"
+                , changeButton (Resize Shorter index) "--"
+                , changeButton (Resize Narrower index) "--<"
+                , changeButton (Resize Wider index) "++>"
                 ]
-                []
 
         _ ->
             ul
