@@ -54,17 +54,9 @@ parseGridFrames =
     String.split "," >> List.filterMap (MovieParser.parseMovie >> resultToMaybe) >> List.map hydrate
 
 
-
--- TODO: is this actually needed?
-
-
-type Route
-    = LayoutsRoute (Maybe String)
-
-
 modelFrom : Route -> Model
-modelFrom (LayoutsRoute maybeMovies) =
-    case (maybeMovies) of
+modelFrom maybeMovies =
+    case maybeMovies of
         Just movieString ->
             { movies = movieString |> parseGridFrames
             }
@@ -75,9 +67,7 @@ modelFrom (LayoutsRoute maybeMovies) =
 
 route : Parser (Route -> a) a
 route =
-    oneOf
-        [ UrlParser.map LayoutsRoute (top <?> stringParam "movies")
-        ]
+    (top <?> stringParam "movies")
 
 
 type Scale
@@ -104,9 +94,13 @@ type alias Model =
     { movies : List GridMovie }
 
 
+type alias Route =
+    Maybe String
+
+
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( (parseHash route location) |> Maybe.withDefault (LayoutsRoute Nothing) |> modelFrom
+    ( (parseHash route location) |> Maybe.withDefault Nothing |> modelFrom
     , Cmd.none
     )
 
