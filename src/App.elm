@@ -49,20 +49,14 @@ hydrate definition =
     }
 
 
-parseGridFrames : String -> List GridMovie
-parseGridFrames =
+gridMoviesFromUrlString : String -> List GridMovie
+gridMoviesFromUrlString =
     String.split "," >> List.filterMap (MovieParser.parseMovie >> resultToMaybe) >> List.map hydrate
 
 
 modelFrom : Route -> Model
 modelFrom maybeMovies =
-    case maybeMovies of
-        Just movieString ->
-            { movies = movieString |> parseGridFrames
-            }
-
-        _ ->
-            { movies = [] }
+    { movies = maybeMovies |> (Maybe.map gridMoviesFromUrlString) |> (withDefault []) }
 
 
 route : Parser (Route -> a) a
