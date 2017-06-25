@@ -1,7 +1,7 @@
 module App exposing (..)
 
-import Html exposing (Html, b, div, li, text, ul, video, body)
-import Html.Attributes exposing (autoplay, height, loop, src, style)
+import Html exposing (Html, a, b, body, div, li, text, ul, video)
+import Html.Attributes exposing (autoplay, height, href, loop, src, style)
 import Html.Events exposing (..)
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import List.Extra exposing (zip, last)
@@ -14,7 +14,11 @@ import Movie exposing (..)
 import MovieParser exposing (..)
 
 
--- TODO: fix typeography of the clickable movie list
+colors =
+    { thunder = "#3A3238"
+    , platinum = "#E2E2E2"
+    , graniteGray = "#636B61"
+    }
 
 
 type alias GridMovie =
@@ -190,7 +194,7 @@ update action model =
 
 movieItem : Int -> Movie -> Html Msg
 movieItem index subject =
-    li [ onClick (Swap index subject) ] [ text subject.description ]
+    li [ (style [ ( "padding", "4px" ) ]) ] [ a [ onClick (Swap index subject), (href "#"), (style [ ( "color", colors.thunder ), ( "font-size", "18px" ) ]) ] [ text subject.description ] ]
 
 
 frameView : GridMovie -> Int -> Html Msg
@@ -210,8 +214,9 @@ frameView gridMovie index =
                                 "max-width"
                       , "100%"
                       )
-                    , ( "border", "10px solid #3A3238" )
+                    , ( "border", "10px solid " ++ colors.thunder )
                     , ( "border-radius", "2px" )
+                    , ( "margin", "auto" )
                     ]
                   )
                 , (autoplay True)
@@ -219,7 +224,19 @@ frameView gridMovie index =
                 []
 
         _ ->
-            ul [] (map (movieItem index) (byOrientation gridMovie.orientation))
+            ul
+                [ (style
+                    [ ( "background-color", colors.platinum )
+                    , ( "width", "80%" )
+                    , ( "padding", "10px" )
+                    , ( "border", "10px solid " ++ colors.thunder )
+                    , ( "border-radius", "2px" )
+                    , ( "list-style", "none" )
+                    , ( "margin", "auto" )
+                    ]
+                  )
+                ]
+                (map (movieItem index) (byOrientation gridMovie.orientation))
 
 
 (+++) : number -> String -> String
@@ -267,7 +284,7 @@ view model =
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )
                 , ( "width", "100vw" )
-                , ( "background-color", "#636B61" )
+                , ( "background-color", colors.graniteGray )
                 , ( "display", "flex" )
                 , ( "justify-content", "center" )
                 , ( "align-items", "center" )
