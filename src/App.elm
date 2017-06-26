@@ -73,6 +73,7 @@ type Scale
 type VideoMode
     = Menu
     | Showing
+    | Buttons
 
 
 main =
@@ -100,7 +101,7 @@ init location =
 
 
 type Msg
-    = ShowMenu Int
+    = ChangeMode VideoMode Int
     | Swap Int Movie
     | UrlChange Navigation.Location
     | Resize ResizeAction Int
@@ -136,14 +137,14 @@ swapMovie model index newMovie =
         |> showAllMovies
 
 
-showMenu : Model -> Int -> Model
-showMenu model index =
+changeMode : Model -> VideoMode -> Int -> Model
+changeMode model mode index =
     { model
         | movies =
             List.Extra.updateAt index
                 (\frame ->
                     { frame
-                        | mode = Menu
+                        | mode = mode
                     }
                 )
                 model.movies
@@ -235,8 +236,8 @@ update action model =
             Swap index newMovie ->
                 wrap (swapMovie model index newMovie)
 
-            ShowMenu index ->
-                wrap (showMenu model index)
+            ChangeMode mode index ->
+                wrap (changeMode model mode index)
 
             Resize action index ->
                 wrap (resize action index model)
@@ -258,33 +259,12 @@ changeButton msg t =
     button [ (onClick msg) ] [ (text t) ]
 
 
-frameView : GridMovie -> Int -> Html Msg
-frameView gridMovie index =
-    case ( gridMovie.mode, gridMovie.movie ) of
-        ( Showing, Just movie ) ->
-            div []
-                [ video
-                    [ (loop True)
-                    , (onClick (ShowMenu index))
-                    , (src ("/public/" ++ (fileName movie)))
-                    , (style
-                        [ ( case gridMovie.orientation of
-                                Horizontal ->
-                                    "max-height"
-
-                                Vertical ->
-                                    "max-width"
-                          , "100%"
-                          )
-                        , ( "border", "10px solid " ++ colors.thunder )
-                        , ( "border-radius", "2px" )
-                        , ( "margin", "auto" )
-                        ]
-                      )
-                    , (autoplay True)
-                    ]
-                    []
-                , changeButton (Move Up index) "^"
+helperViews : GridMovie -> Int -> List (Html Msg)
+helperViews gridMovie index =
+    case gridMovie.mode of
+        Buttons ->
+            [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
+                [ changeButton (Move Up index) "^"
                 , changeButton (Move Down index) "v"
                 , changeButton (Move Left index) "<"
                 , changeButton (Move Right index) ">"
@@ -293,9 +273,10 @@ frameView gridMovie index =
                 , changeButton (Resize Narrower index) "--<"
                 , changeButton (Resize Wider index) "++>"
                 ]
+            ]
 
-        _ ->
-            ul
+        Menu ->
+            [ ul
                 [ (style
                     [ ( "background-color", colors.platinum )
                     , ( "width", "80%" )
@@ -304,10 +285,50 @@ frameView gridMovie index =
                     , ( "border-radius", "2px" )
                     , ( "list-style", "none" )
                     , ( "margin", "auto" )
+                    , ( "position", "absolute" )
+                    , ( "top", "0" )
+                    , ( "left", "0" )
                     ]
                   )
                 ]
                 (map (movieItem index) (byOrientation gridMovie.orientation))
+            ]
+
+        Showing ->
+            []
+
+
+videoTagView : Int -> Movie -> Html Msg
+videoTagView index movie =
+    video
+        [ (loop True)
+        , (onClick (ChangeMode Menu index))
+        , (src ("/public/" ++ (fileName movie)))
+        , (style
+            [ ( case movie.orientation of
+                    Horizontal ->
+                        "max-height"
+
+                    Vertical ->
+                        "max-width"
+              , "100%"
+              )
+            , ( "border", "10px solid " ++ colors.thunder )
+            , ( "border-radius", "2px" )
+            , ( "margin", "auto" )
+            ]
+          )
+        , (autoplay True)
+        ]
+        []
+
+
+frameView : GridMovie -> Int -> Html Msg
+frameView gridMovie index =
+    div [ (onMouseEnter (ChangeMode Buttons index)), (onMouseLeave (ChangeMode Showing index)) ]
+        ((List.filterMap identity [ (Maybe.map (videoTagView index) gridMovie.movie) ])
+            ++ (helperViews gridMovie index)
+        )
 
 
 (+++) : number -> String -> String
@@ -325,8 +346,8 @@ vhGrid i =
     ((toFloat i / 9) * 100) +++ "vh"
 
 
-movieView : Int -> GridMovie -> Html Msg
-movieView index gridMovie =
+gridMovieView : Int -> GridMovie -> Html Msg
+gridMovieView index gridMovie =
     div
         [ (style
             [ ( "position", "absolute" )
@@ -362,5 +383,5 @@ view model =
                 ]
               )
             ]
-            (indexedMap movieView model.movies)
+            (indexedMap gridMovieView model.movies)
         ]
