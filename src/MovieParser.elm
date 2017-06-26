@@ -9,9 +9,9 @@ import Combine.Num exposing (int)
 type alias MovieDefinition =
     { orientation : Orientation
     , top : Int
-    , bottom : Int
+    , height : Int
     , left : Int
-    , right : Int
+    , width : Int
     , movieId : String
     }
 
@@ -28,12 +28,12 @@ dash =
 
 movie : Parser s MovieDefinition
 movie =
-    (\orientation top left bottom right movieId ->
+    (\orientation top left height width movieId ->
         { orientation = orientation
         , top = top
         , left = left
-        , bottom = bottom
-        , right = right
+        , height = height
+        , width = width
         , movieId = movieId
         }
     )

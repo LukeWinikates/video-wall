@@ -24,9 +24,9 @@ colors =
 type alias GridMovie =
     { orientation : Orientation
     , top : Int
-    , bottom : Int
+    , height : Int
     , left : Int
-    , right : Int
+    , width : Int
     , mode : VideoMode
     , movie : Maybe Movie
     }
@@ -41,9 +41,9 @@ hydrate : MovieDefinition -> GridMovie
 hydrate definition =
     { orientation = definition.orientation
     , top = definition.top
-    , bottom = definition.bottom
+    , height = definition.height
     , left = definition.left
-    , right = definition.right
+    , width = definition.width
     , movie = Movie.findById definition.movieId
     , mode = Showing
     }
@@ -153,7 +153,7 @@ changeMode model mode index =
 
 
 frameToString : GridMovie -> String
-frameToString { orientation, top, left, bottom, right, movie } =
+frameToString { orientation, top, left, height, width, movie } =
     [ (case orientation of
         Horizontal ->
             "H"
@@ -163,8 +163,8 @@ frameToString { orientation, top, left, bottom, right, movie } =
       )
     , toString top
     , toString left
-    , toString bottom
-    , toString right
+    , toString height
+    , toString width
     , Maybe.map .id movie |> Maybe.withDefault "N"
     ]
         |> String.join "-"
@@ -184,32 +184,32 @@ resizeMovie : ResizeAction -> GridMovie -> GridMovie
 resizeMovie action gridMovie =
     case action of
         Wider ->
-            { gridMovie | right = gridMovie.right + 1 }
+            { gridMovie | width = gridMovie.width + 50 }
 
         Narrower ->
-            { gridMovie | right = gridMovie.right - 1 }
+            { gridMovie | width = gridMovie.width - 50 }
 
         Taller ->
-            { gridMovie | bottom = gridMovie.bottom + 1 }
+            { gridMovie | height = gridMovie.height + 50 }
 
         Shorter ->
-            { gridMovie | bottom = gridMovie.bottom - 1 }
+            { gridMovie | height = gridMovie.height - 50 }
 
 
 repositionMovie : MoveDirection -> GridMovie -> GridMovie
 repositionMovie direction gridMovie =
     case direction of
         Up ->
-            { gridMovie | top = gridMovie.top - 1, bottom = gridMovie.bottom - 1 }
+            { gridMovie | top = gridMovie.top - 50 }
 
         Down ->
-            { gridMovie | top = gridMovie.top + 1, bottom = gridMovie.bottom + 1 }
+            { gridMovie | top = gridMovie.top + 50 }
 
         Left ->
-            { gridMovie | left = gridMovie.left - 1, right = gridMovie.right - 1 }
+            { gridMovie | left = gridMovie.left - 50 }
 
         Right ->
-            { gridMovie | left = gridMovie.left + 1, right = gridMovie.right + 1 }
+            { gridMovie | left = gridMovie.left + 50 }
 
 
 move : MoveDirection -> Int -> Model -> Model
@@ -336,25 +336,15 @@ frameView gridMovie index =
     (toString i) ++ s
 
 
-vwGrid : Int -> String
-vwGrid i =
-    ((toFloat i / 16) * 100) +++ "vw"
-
-
-vhGrid : Int -> String
-vhGrid i =
-    ((toFloat i / 9) * 100) +++ "vh"
-
-
 gridMovieView : Int -> GridMovie -> Html Msg
 gridMovieView index gridMovie =
     div
         [ (style
             [ ( "position", "absolute" )
-            , ( "left", vwGrid (gridMovie.left - 1) )
-            , ( "width", vwGrid (gridMovie.right - gridMovie.left) )
-            , ( "top", vhGrid (gridMovie.top - 1) )
-            , ( "height", vhGrid (gridMovie.bottom - gridMovie.top) )
+            , ( "left", gridMovie.left +++ "px" )
+            , ( "width", gridMovie.width +++ "px" )
+            , ( "top", gridMovie.top +++ "px" )
+            , ( "height", gridMovie.height +++ "px" )
             , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
