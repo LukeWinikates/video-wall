@@ -130,27 +130,25 @@ showAllMovies model =
     }
 
 
+changeMovieAtIndex : (GridMovie -> GridMovie) -> Model -> Int -> Model
+changeMovieAtIndex f model index =
+    { model
+        | movies =
+            model.movies
+                |> List.Extra.updateAt index f
+                |> Maybe.withDefault model.movies
+    }
+
+
 swapMovie : Model -> Int -> Movie -> Model
 swapMovie model index newMovie =
-    { model
-        | movies = (List.Extra.updateAt index (\m -> { m | movie = Just newMovie }) model.movies) |> Maybe.withDefault model.movies
-    }
+    changeMovieAtIndex (\m -> { m | movie = Just newMovie }) model index
         |> showAllMovies
 
 
 changeMode : Model -> VideoMode -> Int -> Model
 changeMode model mode index =
-    { model
-        | movies =
-            List.Extra.updateAt index
-                (\frame ->
-                    { frame
-                        | mode = mode
-                    }
-                )
-                model.movies
-                |> Maybe.withDefault model.movies
-    }
+    changeMovieAtIndex (\frame -> { frame | mode = mode }) model index
 
 
 frameToString : GridMovie -> String
@@ -215,16 +213,12 @@ repositionMovie direction gridMovie =
 
 move : MoveDirection -> Int -> Model -> Model
 move direction index model =
-    { model
-        | movies = (List.Extra.updateAt index (repositionMovie direction) model.movies) |> Maybe.withDefault model.movies
-    }
+    changeMovieAtIndex (repositionMovie direction) model index
 
 
 resize : ResizeAction -> Int -> Model -> Model
 resize action index model =
-    { model
-        | movies = (List.Extra.updateAt index (resizeMovie action) model.movies) |> Maybe.withDefault model.movies
-    }
+    changeMovieAtIndex (resizeMovie action) model index
 
 
 newMovie : Orientation -> Model -> Model
