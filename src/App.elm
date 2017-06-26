@@ -106,6 +106,7 @@ type Msg
     | UrlChange Navigation.Location
     | Resize ResizeAction Int
     | Move MoveDirection Int
+    | NewMovie Orientation
 
 
 type MoveDirection
@@ -226,6 +227,23 @@ resize action index model =
     }
 
 
+newMovie : Orientation -> Model -> Model
+newMovie orientation model =
+    { model
+        | movies =
+            model.movies
+                ++ [ { orientation = orientation
+                     , top = 500
+                     , height = 1000
+                     , left = 50
+                     , width = 350
+                     , movie = Nothing
+                     , mode = Menu
+                     }
+                   ]
+    }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
@@ -244,6 +262,9 @@ update action model =
 
             Move direction index ->
                 wrap (move direction index model)
+
+            NewMovie orientation ->
+                wrap (newMovie orientation model)
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -374,4 +395,6 @@ view model =
               )
             ]
             (indexedMap gridMovieView model.movies)
+        , changeButton (NewMovie Vertical) "+Vertical"
+        , changeButton (NewMovie Horizontal) "+Horizontal"
         ]
