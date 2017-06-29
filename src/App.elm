@@ -1,5 +1,7 @@
 module App exposing (..)
 
+import Color
+import FontAwesome
 import Html exposing (Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (autoplay, height, href, loop, src, style)
 import Html.Events exposing (..)
@@ -105,23 +107,8 @@ type Msg
     = ChangeMode VideoMode Int
     | Swap Int Movie
     | UrlChange Navigation.Location
-    | Resize ResizeAction Int
-    | Move MoveDirection Int
+    | Resize Scale Int
     | NewMovie Orientation
-
-
-type MoveDirection
-    = Left
-    | Right
-    | Up
-    | Down
-
-
-type ResizeAction
-    = Wider
-    | Narrower
-    | Taller
-    | Shorter
 
 
 showAllMovies : Model -> Model
@@ -180,46 +167,46 @@ toUrl model =
     "?movies=" ++ (framesUrlString model.movies)
 
 
-resizeMovie : ResizeAction -> GridMovie -> GridMovie
-resizeMovie action gridMovie =
-    case action of
-        Wider ->
-            { gridMovie | width = gridMovie.width + 50 }
-
-        Narrower ->
-            { gridMovie | width = gridMovie.width - 50 }
-
-        Taller ->
-            { gridMovie | height = gridMovie.height + 50 }
-
-        Shorter ->
-            { gridMovie | height = gridMovie.height - 50 }
+type alias Dimension =
+    { width : Int
+    , height : Int
+    }
 
 
-repositionMovie : MoveDirection -> GridMovie -> GridMovie
-repositionMovie direction gridMovie =
-    case direction of
-        Up ->
-            { gridMovie | top = gridMovie.top - 50 }
+getScale : Scale -> Orientation -> Dimension
+getScale scale orientation =
+    case ( scale, orientation ) of
+        ( Small, Vertical ) ->
+            { height = 340, width = 190 }
 
-        Down ->
-            { gridMovie | top = gridMovie.top + 50 }
+        ( Medium, Vertical ) ->
+            { height = 516, width = 290 }
 
-        Left ->
-            { gridMovie | left = gridMovie.left - 50 }
+        ( Large, Vertical ) ->
+            { height = 640, width = 360 }
 
-        Right ->
-            { gridMovie | left = gridMovie.left + 50 }
+        ( Small, Horizontal ) ->
+            { height = 190, width = 340 }
+
+        ( Medium, Horizontal ) ->
+            { height = 290, width = 516 }
+
+        ( Large, Horizontal ) ->
+            { height = 360, width = 640 }
 
 
-move : MoveDirection -> Int -> Model -> Model
-move direction index model =
-    changeMovieAtIndex (repositionMovie direction) model index
+resizeMovie : Scale -> GridMovie -> GridMovie
+resizeMovie scale gridMovie =
+    let
+        newScale =
+            getScale scale gridMovie.orientation
+    in
+        { gridMovie | width = newScale.width, height = newScale.height }
 
 
-resize : ResizeAction -> Int -> Model -> Model
-resize action index model =
-    changeMovieAtIndex (resizeMovie action) model index
+resize : Scale -> Int -> Model -> Model
+resize scale index model =
+    changeMovieAtIndex (resizeMovie scale) model index
 
 
 newMovie : Orientation -> Model -> Model
@@ -252,11 +239,8 @@ update action model =
             ChangeMode mode index ->
                 wrap (changeMode model mode index)
 
-            Resize action index ->
-                wrap (resize action index model)
-
-            Move direction index ->
-                wrap (move direction index model)
+            Resize scale index ->
+                wrap (resize scale index model)
 
             NewMovie orientation ->
                 wrap (newMovie orientation model)
@@ -275,19 +259,20 @@ changeButton msg t =
     button [ (onClick msg), style [ ( "background-color", colors.mistyRose ), ( "border-radius", "2px" ), ( "border", "none" ), ( "margin", "5px" ), ( "padding", "5px 10px" ) ] ] [ (text t) ]
 
 
+dragButton : Msg -> Html Msg -> Html Msg
+dragButton msg icon =
+    button [ (onClick msg), style [ ( "background-color", colors.mistyRose ), ( "border-radius", "2px" ), ( "border", "none" ), ( "margin", "5px" ), ( "padding", "5px 10px" ) ] ] [ icon ]
+
+
 helperViews : GridMovie -> Int -> List (Html Msg)
 helperViews gridMovie index =
     case gridMovie.mode of
         Buttons ->
             [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
-                [ changeButton (Move Up index) "^"
-                , changeButton (Move Down index) "v"
-                , changeButton (Move Left index) "<"
-                , changeButton (Move Right index) ">"
-                , changeButton (Resize Taller index) "++"
-                , changeButton (Resize Shorter index) "--"
-                , changeButton (Resize Narrower index) "--<"
-                , changeButton (Resize Wider index) "++>"
+                [ dragButton (Resize Small 0) (FontAwesome.arrows Color.darkGray 12)
+                , changeButton (Resize Small index) "S"
+                , changeButton (Resize Medium index) "M"
+                , changeButton (Resize Large index) "L"
                 ]
             ]
 
