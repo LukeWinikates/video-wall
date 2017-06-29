@@ -18,6 +18,7 @@ colors =
     { thunder = "#3A3238"
     , platinum = "#E2E2E2"
     , graniteGray = "#636B61"
+    , mistyRose = "#F5E3E0"
     }
 
 
@@ -271,7 +272,7 @@ movieItem index subject =
 
 changeButton : Msg -> String -> Html Msg
 changeButton msg t =
-    button [ (onClick msg) ] [ (text t) ]
+    button [ (onClick msg), style [ ( "background-color", colors.mistyRose ), ( "border-radius", "2px" ), ( "border", "none" ), ( "margin", "5px" ), ( "padding", "5px 10px" ) ] ] [ (text t) ]
 
 
 helperViews : GridMovie -> Int -> List (Html Msg)
