@@ -48,12 +48,8 @@ type alias Dimension =
     }
 
 
-
--- TODO: this name is bad
-
-
-getScale : Scale -> Orientation -> Dimension
-getScale scale orientation =
+dimension : Scale -> Orientation -> Dimension
+dimension scale orientation =
     case ( scale, orientation ) of
         ( Small, Vertical ) ->
             { height = 340, width = 190 }
@@ -78,7 +74,7 @@ resizeMovie : Scale -> GridMovie -> GridMovie
 resizeMovie scale gridMovie =
     let
         newScale =
-            getScale scale gridMovie.orientation
+            dimension scale gridMovie.orientation
     in
         { gridMovie | width = newScale.width, height = newScale.height }
 
