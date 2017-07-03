@@ -2,18 +2,26 @@ module App exposing (..)
 
 import Color
 import FontAwesome
-import Html exposing (Html, a, b, body, button, div, li, text, ul, video)
+import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (autoplay, height, href, loop, src, style)
 import Html.Events exposing (..)
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import List.Extra exposing (zip, last)
 import Maybe exposing (withDefault)
+import Mouse exposing (Position)
 import Tuple exposing (second)
 import Geometry exposing (..)
 import Navigation exposing (..)
 import UrlParser exposing (Parser, oneOf, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
 import MovieParser exposing (..)
+import Json.Decode
+
+
+-- TODO: refactor dragging for elegance
+-- TODO: pause all movies on drag, unpause on dragstop
+-- TODO: clock on an empty space to insert horizontal or vertical video
+-- TODO: see if there are bugs with dragging (easier to tell once performance is addressed by pausing). It looks to me like maybe the drag end makes the position jump.
 
 
 colors =
@@ -59,7 +67,7 @@ gridMoviesFromUrlString =
 
 modelFrom : Route -> Model
 modelFrom maybeMovies =
-    { movies = maybeMovies |> (Maybe.map gridMoviesFromUrlString) |> (withDefault []) }
+    { movies = maybeMovies |> (Maybe.map gridMoviesFromUrlString) |> (withDefault []), dragging = Nothing }
 
 
 route : Parser (Route -> a) a
@@ -84,12 +92,29 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.dragging of
+        Nothing ->
+            Sub.none
+
+        Just { index } ->
+            Sub.batch [ Mouse.moves (DragAt index), Mouse.ups (DragEnd index) ]
+
+
 type alias Model =
-    { movies : List GridMovie }
+    { movies : List GridMovie
+    , dragging :
+        Maybe
+            { index : Int
+            , start : Mouse.Position
+            , current : Mouse.Position
+            }
+    }
 
 
 type alias Route =
@@ -109,6 +134,9 @@ type Msg
     | UrlChange Navigation.Location
     | Resize Scale Int
     | NewMovie Orientation
+    | DragStart Int Mouse.Position
+    | DragAt Int Mouse.Position
+    | DragEnd Int Mouse.Position
 
 
 showAllMovies : Model -> Model
@@ -226,6 +254,40 @@ newMovie orientation model =
     }
 
 
+dragMovie : Model -> Position -> Int -> Model
+dragMovie model position index =
+    (Maybe.map
+        (\drag ->
+            (changeMovieAtIndex
+                (\gm ->
+                    { gm
+                        | top = position.y + drag.current.y - drag.start.y
+                        , left = position.x + drag.current.x - drag.start.x
+                    }
+                )
+                model
+                index
+            )
+        )
+        model.dragging
+    )
+        |> Maybe.withDefault model
+
+
+updateDrag : Model -> Position -> Model
+updateDrag model position =
+    (Maybe.map
+        (\drag -> { model | dragging = Just { index = drag.index, start = drag.start, current = position } })
+        model.dragging
+    )
+        |> Maybe.withDefault model
+
+
+moveToNewDragPosition : Model -> Position -> Int -> Model
+moveToNewDragPosition model position index =
+    ((dragMovie model position index) |> (\m -> updateDrag m position))
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
@@ -241,6 +303,18 @@ update action model =
 
             Resize scale index ->
                 wrap (resize scale index model)
+
+            DragStart index position ->
+                wrap { model | dragging = Just { index = index, start = position, current = position } }
+
+            DragAt index position ->
+                wrap (moveToNewDragPosition model position index)
+
+            DragEnd index position ->
+                (changeMovieAtIndex (\gm -> { gm | top = position.y, left = position.x }) model index)
+                    |> \m ->
+                        { m | dragging = Nothing }
+                            |> wrap
 
             NewMovie orientation ->
                 wrap (newMovie orientation model)
@@ -259,9 +333,14 @@ changeButton msg t =
     button [ (onClick msg), style [ ( "background-color", colors.mistyRose ), ( "border-radius", "2px" ), ( "border", "none" ), ( "margin", "5px" ), ( "padding", "5px 10px" ) ] ] [ (text t) ]
 
 
-dragButton : Msg -> Html Msg -> Html Msg
+onMouseDownWithDecoder : (Mouse.Position -> Msg) -> Attribute Msg
+onMouseDownWithDecoder f =
+    on "mousedown" (Json.Decode.map f Mouse.position)
+
+
+dragButton : (Mouse.Position -> Msg) -> Html Msg -> Html Msg
 dragButton msg icon =
-    button [ (onClick msg), style [ ( "background-color", colors.mistyRose ), ( "border-radius", "2px" ), ( "border", "none" ), ( "margin", "5px" ), ( "padding", "5px 10px" ) ] ] [ icon ]
+    button [ (onMouseDownWithDecoder msg), style [ ( "background-color", colors.mistyRose ), ( "border-radius", "2px" ), ( "border", "none" ), ( "margin", "5px" ), ( "padding", "5px 10px" ) ] ] [ icon ]
 
 
 helperViews : GridMovie -> Int -> List (Html Msg)
@@ -269,7 +348,7 @@ helperViews gridMovie index =
     case gridMovie.mode of
         Buttons ->
             [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
-                [ dragButton (Resize Small 0) (FontAwesome.arrows Color.darkGray 12)
+                [ dragButton (DragStart index) (FontAwesome.arrows Color.darkGray 12)
                 , changeButton (Resize Small index) "S"
                 , changeButton (Resize Medium index) "M"
                 , changeButton (Resize Large index) "L"
