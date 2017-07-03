@@ -14,15 +14,18 @@ import Mouse exposing (Position)
 -- { updateMovie = swap idx movie, updateAll = changeMode showing }
 
 
-showAllMovies : Model -> Model
-showAllMovies model =
-    { model
-        | movies = (map (\f -> { f | mode = Showing }) model.movies)
-    }
+changeMode : VideoMode -> GridMovie -> GridMovie
+changeMode mode gridMovie =
+    { gridMovie | mode = mode }
 
 
-changeMovieAtIndex : (GridMovie -> GridMovie) -> Model -> Int -> Model
-changeMovieAtIndex f model index =
+applyAll : (GridMovie -> GridMovie) -> Model -> Model
+applyAll f m =
+    { m | movies = List.map f m.movies }
+
+
+applyAtIndex : (GridMovie -> GridMovie) -> Int -> Model -> Model
+applyAtIndex f index model =
     { model
         | movies =
             model.movies
@@ -33,13 +36,8 @@ changeMovieAtIndex f model index =
 
 swapMovie : Model -> Int -> Movie -> Model
 swapMovie model index newMovie =
-    changeMovieAtIndex (\m -> { m | movie = Just newMovie }) model index
-        |> showAllMovies
-
-
-changeMode : Model -> VideoMode -> Int -> Model
-changeMode model mode index =
-    changeMovieAtIndex (\frame -> { frame | mode = mode }) model index
+    applyAtIndex (\m -> { m | movie = Just newMovie }) index model
+        |> applyAll (changeMode Showing)
 
 
 type alias Dimension =
@@ -80,8 +78,8 @@ resizeMovie scale gridMovie =
 
 
 resize : Scale -> Int -> Model -> Model
-resize scale index model =
-    changeMovieAtIndex (resizeMovie scale) model index
+resize scale index =
+    applyAtIndex (resizeMovie scale) index
 
 
 newMovie : Orientation -> Model -> Model
@@ -105,15 +103,15 @@ dragMovie : Model -> Position -> Int -> Model
 dragMovie model position index =
     (Maybe.map
         (\drag ->
-            (changeMovieAtIndex
+            (applyAtIndex
                 (\gm ->
                     { gm
                         | top = position.y + drag.current.y - drag.start.y
                         , left = position.x + drag.current.x - drag.start.x
                     }
                 )
-                model
                 index
+                model
             )
         )
         model.dragging

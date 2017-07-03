@@ -16,7 +16,7 @@ import MovieParser exposing (..)
 import Json.Decode
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (changeMode, changeMovieAtIndex, moveToNewDragPosition, newMovie, resize, swapMovie)
+import Model.Mutate exposing (changeMode, applyAtIndex, moveToNewDragPosition, newMovie, resize, swapMovie)
 
 
 -- TODO: refactor dragging for elegance
@@ -86,6 +86,7 @@ subscriptions model =
         Just { index } ->
             Sub.batch [ Mouse.moves (DragAt index), Mouse.ups (DragEnd index) ]
 
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
@@ -97,7 +98,7 @@ update action model =
                 wrap (swapMovie model index newMovie)
 
             ChangeMode mode index ->
-                wrap (changeMode model mode index)
+                wrap (applyAtIndex (changeMode mode) index model)
 
             Resize scale index ->
                 wrap (resize scale index model)
@@ -109,7 +110,7 @@ update action model =
                 wrap (moveToNewDragPosition model position index)
 
             DragEnd index position ->
-                (changeMovieAtIndex (\gm -> { gm | top = position.y, left = position.x }) model index)
+                (applyAtIndex (\gm -> { gm | top = position.y, left = position.x }) index model)
                     |> \m ->
                         { m | dragging = Nothing }
                             |> wrap
