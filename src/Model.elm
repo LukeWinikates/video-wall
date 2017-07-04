@@ -18,14 +18,16 @@ type alias GridMovie =
     }
 
 
+type alias Drag =
+    { index : Int
+    , start : Mouse.Position
+    , current : Mouse.Position
+    }
+
+
 type alias Model =
     { movies : List GridMovie
-    , dragging :
-        Maybe
-            { index : Int
-            , start : Mouse.Position
-            , current : Mouse.Position
-            }
+    , dragging : Maybe Drag
     }
 
 
