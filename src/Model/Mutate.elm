@@ -1,5 +1,6 @@
 module Model.Mutate exposing (..)
 
+import Dragging exposing (Drag)
 import Geometry exposing (Orientation(Horizontal, Vertical))
 import Model exposing (..)
 import List.Extra
@@ -82,6 +83,16 @@ resize scale index =
     applyAtIndex (resizeMovie scale) index
 
 
+changePosition : Position -> GridMovie -> GridMovie
+changePosition pos gridMovie =
+    { gridMovie | top = pos.y, left = pos.x }
+
+
+drag : Maybe (Drag Int) -> Model -> Model
+drag maybeDrag model =
+    { model | dragging = maybeDrag }
+
+
 newMovie : Orientation -> Model -> Model
 newMovie orientation model =
     { model
@@ -98,36 +109,3 @@ newMovie orientation model =
                    ]
     }
 
-
-dragMovie : Model -> Position -> Int -> Model
-dragMovie model position index =
-    (Maybe.map
-        (\drag ->
-            (applyAtIndex
-                (\gm ->
-                    { gm
-                        | top = position.y + drag.current.y - drag.start.y
-                        , left = position.x + drag.current.x - drag.start.x
-                    }
-                )
-                index
-                model
-            )
-        )
-        model.dragging
-    )
-        |> Maybe.withDefault model
-
-
-updateDrag : Model -> Position -> Model
-updateDrag model position =
-    (Maybe.map
-        (\drag -> { model | dragging = Just { index = drag.index, start = drag.start, current = position } })
-        model.dragging
-    )
-        |> Maybe.withDefault model
-
-
-moveToNewDragPosition : Model -> Position -> Int -> Model
-moveToNewDragPosition model position index =
-    ((dragMovie model position index) |> (\m -> updateDrag m position))

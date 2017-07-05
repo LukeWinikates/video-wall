@@ -3,9 +3,6 @@ module Dragging exposing (..)
 import Mouse
 
 
--- needs: a function for assembling Msg from Move/End signals
-
-
 type DragEventType
     = Start
     | Move
@@ -16,59 +13,51 @@ type DragEvent
     = DragEvent DragEventType Mouse.Position
 
 
-type alias Drag =
+type alias Drag draggedThingState =
     { current : { x : Int, y : Int }
     , start : { x : Int, y : Int }
+    , state : draggedThingState
     }
 
 
-type alias DragModelState =
-    { drag : Maybe Drag
-    , position : { x : Int, y : Int }
-    }
+subs : Maybe (Drag dragCapturedState) -> (dragCapturedState -> DragEvent -> appMsg) -> Sub appMsg
+subs maybeDrag f =
+    case maybeDrag of
+        Nothing ->
+            Sub.none
+
+        Just { state } ->
+            Sub.batch
+                [ Mouse.moves (\p -> (f state (DragEvent Start p)))
+                , Mouse.ups (\p -> (f state (DragEvent End p)))
+                ]
+
+-- TODO: it feels like the dragged state is not really working all that well,
+-- since it still needs to be passed through here.
+
+updateDrag : DragEvent -> a -> Maybe (Drag a) -> Maybe (Drag a)
+updateDrag (DragEvent typ position) state maybeDrag =
+    case typ of
+        Start ->
+            Just { current = position, start = position, state = state }
+
+        Move ->
+            Maybe.map (\drag -> { drag | current = position })
+                maybeDrag
+
+        End ->
+            Nothing
 
 
-
---type alias Options =
---    { updatePosition: ({x:Int, y: Int} -> a)
---     , updateDragging: ({ start: Mouse.Position, current: Mouse.Position } -> b )
---     }
---
---
---init : Options ->
---
---dragSubscriptions : a -> List (Sub b)
---dragSubscriptions model =
---    [ Mouse.moves (Move), Mouse.ups (End) ]
-
-
-calcPosition : DragModelState -> Mouse.Position -> DragModelState
-calcPosition model position =
-    (Maybe.map
-        (\drag ->
-            { model
-                | position =
+map : DragEvent -> state -> Maybe (Drag state) -> (Mouse.Position -> Maybe (Drag state) -> model) -> model
+map ((DragEvent typ position) as event) state maybeDrag f =
+    (updateDrag event state maybeDrag)
+        |> case ( typ, maybeDrag ) of
+            ( Move, Just drag ) ->
+                f
                     { y = position.y + drag.current.y - drag.start.y
                     , x = position.x + drag.current.x - drag.start.x
                     }
-                , drag = Just { drag | current = position }
-            }
-        )
-        model.drag
-    )
-        |> Maybe.withDefault model
 
-
-handle : DragEvent -> DragModelState -> DragModelState
-handle (DragEvent typ position) state =
-    case typ of
-        Start ->
-            { drag = Just { current = position, start = position }
-            , position = state.position
-            }
-
-        Move ->
-            calcPosition state position
-
-        End ->
-            { drag = Nothing, position = position }
+            _ ->
+                f position

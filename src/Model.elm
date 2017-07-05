@@ -1,5 +1,6 @@
 module Model exposing (..)
 
+import Dragging
 import Movie exposing (..)
 import MovieParser exposing (..)
 import Geometry exposing (..)
@@ -18,16 +19,9 @@ type alias GridMovie =
     }
 
 
-type alias Drag =
-    { index : Int
-    , start : Mouse.Position
-    , current : Mouse.Position
-    }
-
-
 type alias Model =
     { movies : List GridMovie
-    , dragging : Maybe Drag
+    , dragging : Maybe (Dragging.Drag Int)
     }
 
 

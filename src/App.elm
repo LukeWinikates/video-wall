@@ -16,7 +16,7 @@ import MovieParser exposing (..)
 import Json.Decode
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (changeMode, applyAtIndex, moveToNewDragPosition, newMovie, resize, swapMovie)
+import Model.Mutate exposing (applyAtIndex, changeMode, changePosition, drag, newMovie, resize, swapMovie)
 import Dragging exposing (..)
 import List.Extra
 
@@ -79,51 +79,7 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.dragging of
-        Nothing ->
-            Sub.none
-
-        Just { index } ->
-            Sub.batch
-                [ Mouse.moves (\p -> (DragMovie index (DragEvent Start p)))
-                , Mouse.ups (\p -> (DragMovie index (DragEvent End p)))
-                ]
-
-
-handleDrag : Int -> DragEvent -> Model -> Model
-handleDrag index event model =
-    List.Extra.getAt index model.movies
-        |> Maybe.map
-            (\gridMovie ->
-                handle event
-                    { position = { x = gridMovie.left, y = gridMovie.top }
-                    , drag =
-                        Maybe.map
-                            (\d ->
-                                { current = d.current
-                                , start = d.start
-                                }
-                            )
-                            model.dragging
-                    }
-                    |> \dragModel ->
-                        { dragging =
-                            Maybe.map
-                                (\drag ->
-                                    { start = drag.start
-                                    , current = drag.current
-                                    , index = index
-                                    }
-                                )
-                                dragModel.drag
-                        , movies =
-                            List.Extra.updateAt index
-                                (\gm -> { gm | top = dragModel.position.y, left = dragModel.position.x })
-                                model.movies
-                                |> Maybe.withDefault model.movies
-                        }
-            )
-        |> Maybe.withDefault model
+    Dragging.subs model.dragging DragMovie
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,7 +99,14 @@ update action model =
                 wrap (resize scale index model)
 
             DragMovie index event ->
-                wrap (handleDrag index event model)
+                wrap <|
+                    Dragging.map event
+                        index
+                        model.dragging
+                        (\position newDrag ->
+                            (applyAtIndex (changePosition position) index model)
+                                |> drag newDrag
+                        )
 
             NewMovie orientation ->
                 wrap (newMovie orientation model)
@@ -233,7 +196,7 @@ helperViews gridMovie index =
                     ]
                   )
                 ]
-                (map (movieItem index) (byOrientation gridMovie.orientation))
+                (List.map (movieItem index) (byOrientation gridMovie.orientation))
             ]
 
         Showing ->
