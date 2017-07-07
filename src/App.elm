@@ -21,11 +21,10 @@ import Dragging exposing (..)
 import List.Extra
 
 
--- TODO: refactor dragging for elegance
--- TODO: pause all movies on drag, unpause on dragstop
 -- TODO: clock on an empty space to insert horizontal or vertical video
 -- TODO: see if there are bugs with dragging (easier to tell once performance is addressed by pausing). It looks to me like maybe the drag end makes the position jump.
--- TODO: see if dragging can be extracted into its own module, including: special json decoder stuff, the drag event types, and the math for turning a start/current/etc into an updated position
+-- TODO I'm interested in a snap-to-grid style, and maybe that also offers a solution?
+-- TODO: there seem to be lingering framerate problems. I wonder how I can diagnose.
 
 
 colors =
@@ -263,6 +262,14 @@ gridMovieView index gridMovie =
             , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
+            , ( "z-index"
+              , case gridMovie.mode of
+                    Buttons ->
+                        "20"
+
+                    _ ->
+                        "0"
+              )
             ]
           )
         ]
