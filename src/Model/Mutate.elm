@@ -108,4 +108,3 @@ newMovie orientation model =
                      }
                    ]
     }
-

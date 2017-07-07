@@ -32,8 +32,11 @@ subs maybeDrag f =
                 , Mouse.ups (\p -> (f state (DragEvent End p)))
                 ]
 
+
+
 -- TODO: it feels like the dragged state is not really working all that well,
 -- since it still needs to be passed through here.
+
 
 updateDrag : DragEvent -> a -> Maybe (Drag a) -> Maybe (Drag a)
 updateDrag (DragEvent typ position) state maybeDrag =

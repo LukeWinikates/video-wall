@@ -82,6 +82,16 @@ subscriptions model =
     Dragging.subs model.dragging DragMovie
 
 
+wrapDrag : DragEventType -> Model -> ( Model, Cmd Msg )
+wrapDrag typ model =
+    case typ of
+        End ->
+            ( model, model |> toUrl |> Navigation.modifyUrl )
+
+        _ ->
+            ( model, Cmd.none )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
@@ -98,15 +108,15 @@ update action model =
             Resize scale index ->
                 wrap (resize scale index model)
 
-            DragMovie index event ->
-                wrap <|
-                    Dragging.map event
-                        index
-                        model.dragging
-                        (\position newDrag ->
-                            (applyAtIndex (changePosition position) index model)
-                                |> drag newDrag
-                        )
+            DragMovie index ((DragEvent typ _) as event) ->
+                Dragging.map event
+                    index
+                    model.dragging
+                    (\position newDrag ->
+                        (applyAtIndex (changePosition position) index model)
+                            |> drag newDrag
+                    )
+                    |> wrapDrag typ
 
             NewMovie orientation ->
                 wrap (newMovie orientation model)
