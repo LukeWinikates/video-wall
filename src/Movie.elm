@@ -50,6 +50,20 @@ movies =
             , { id = "6270", orientation = Vertical, description = "View downriver from sitting on log" }
             ]
           )
+        , ( "lawizwiz"
+          , [ { id = "6360", orientation = Horizontal, description = "Fast water through logs" }
+            , { id = "6361", orientation = Vertical, description = "Rapids with log in foreground" }
+            , { id = "6363", orientation = Vertical, description = "Log's eye view" }
+            , { id = "6364", orientation = Vertical, description = "Rocks in shallow water" }
+            , { id = "6369", orientation = Horizontal, description = "Logs on logs obscuring river" }
+            , { id = "6370", orientation = Vertical, description = "Just waterfall" }
+            , { id = "6371", orientation = Horizontal, description = "Water rushing left to right" }
+            , { id = "6372", orientation = Horizontal, description = "The rock's whole life is being wet" }
+            , { id = "6373", orientation = Vertical, description = "The rock's whole life is being wet" }
+            , { id = "6387", orientation = Horizontal, description = "Ripples in a quiet spot" }
+            , { id = "6394", orientation = Vertical, description = "The stream turns here" }
+            ]
+          )
         ]
 
 

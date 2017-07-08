@@ -219,12 +219,12 @@ helperViews collectionMovies gridMovie index =
             []
 
 
-videoTagView : Int -> Movie -> Html Msg
-videoTagView index movie =
+videoTagView : Model -> Int -> Movie -> Html Msg
+videoTagView model index movie =
     video
         [ (loop True)
         , (onClick (ChangeMode Menu index))
-        , (src ("/public/" ++ (fileName movie)))
+        , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
         , (style
             [ ( case movie.orientation of
                     Horizontal ->
@@ -247,7 +247,7 @@ videoTagView index movie =
 frameView : Model -> GridMovie -> Int -> Html Msg
 frameView model gridMovie index =
     div [ (onMouseEnter (ChangeMode Buttons index)), (onMouseLeave (ChangeMode Showing index)) ]
-        ((List.filterMap identity [ (Maybe.map (videoTagView index) gridMovie.movie) ])
+        ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
             ++ (helperViews model.collectionMovies gridMovie index)
         )
 
