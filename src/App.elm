@@ -35,13 +35,13 @@ colors =
     }
 
 
-type alias Route =
-    Maybe String
+type Route
+    = AppRoute (Maybe String) (Maybe String)
 
 
 route : Parser (Route -> a) a
 route =
-    (top <?> stringParam "movies")
+    UrlParser.map AppRoute (top <?> stringParam "collection" <?> stringParam "movies")
 
 
 main =
@@ -55,16 +55,23 @@ main =
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( (parseHash route location) |> Maybe.withDefault Nothing |> modelFrom
+    ( (parseHash route location) |> Maybe.withDefault (AppRoute Nothing Nothing) |> modelFrom
     , Cmd.none
     )
 
 
 modelFrom : Route -> Model
-modelFrom maybeMovies =
-    { movies = maybeMovies |> (Maybe.map gridMoviesFromUrlString) |> (withDefault [])
-    , dragging = Nothing
-    }
+modelFrom (AppRoute maybeCollection maybeMovies) =
+    case ( maybeCollection, maybeMovies ) of
+        ( Just collectionName, Just movieString ) ->
+            { movies = movieString |> gridMoviesFromUrlString collectionName
+            , collection = collectionName
+            , collectionMovies = Movie.fromCollection collectionName
+            , dragging = Nothing
+            }
+
+        _ ->
+            Model.empty
 
 
 type Msg
@@ -177,8 +184,8 @@ dragButton msg icon =
         [ icon ]
 
 
-helperViews : GridMovie -> Int -> List (Html Msg)
-helperViews gridMovie index =
+helperViews : List Movie -> GridMovie -> Int -> List (Html Msg)
+helperViews collectionMovies gridMovie index =
     case gridMovie.mode of
         Buttons ->
             [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
@@ -205,7 +212,7 @@ helperViews gridMovie index =
                     ]
                   )
                 ]
-                (List.map (movieItem index) (byOrientation gridMovie.orientation))
+                (List.map (movieItem index) (byOrientation collectionMovies gridMovie.orientation))
             ]
 
         Showing ->
@@ -237,11 +244,11 @@ videoTagView index movie =
         []
 
 
-frameView : GridMovie -> Int -> Html Msg
-frameView gridMovie index =
+frameView : Model -> GridMovie -> Int -> Html Msg
+frameView model gridMovie index =
     div [ (onMouseEnter (ChangeMode Buttons index)), (onMouseLeave (ChangeMode Showing index)) ]
         ((List.filterMap identity [ (Maybe.map (videoTagView index) gridMovie.movie) ])
-            ++ (helperViews gridMovie index)
+            ++ (helperViews model.collectionMovies gridMovie index)
         )
 
 
@@ -250,8 +257,8 @@ px =
     toString >> (flip (++) "px")
 
 
-gridMovieView : Int -> GridMovie -> Html Msg
-gridMovieView index gridMovie =
+gridMovieView : Model -> Int -> GridMovie -> Html Msg
+gridMovieView model index gridMovie =
     div
         [ (style
             [ ( "position", "absolute" )
@@ -273,7 +280,7 @@ gridMovieView index gridMovie =
             ]
           )
         ]
-        [ frameView gridMovie index ]
+        [ frameView model gridMovie index ]
 
 
 view : Model -> Html Msg
@@ -295,7 +302,7 @@ view model =
                 ]
               )
             ]
-            (indexedMap gridMovieView model.movies)
+            (indexedMap (gridMovieView model) model.movies)
         , changeButton (NewMovie Vertical) "+Vertical"
         , changeButton (NewMovie Horizontal) "+Horizontal"
         ]

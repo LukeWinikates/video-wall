@@ -21,6 +21,8 @@ type alias GridMovie =
 
 type alias Model =
     { movies : List GridMovie
+    , collection : String
+    , collectionMovies : List Movie
     , dragging : Maybe (Dragging.Drag Int)
     }
 
@@ -37,21 +39,30 @@ type VideoMode
     | Buttons
 
 
-hydrate : MovieDefinition -> GridMovie
-hydrate definition =
+empty : Model
+empty =
+    { movies = []
+    , collectionMovies = []
+    , collection = ""
+    , dragging = Nothing
+    }
+
+
+hydrate : String -> MovieDefinition -> GridMovie
+hydrate collection definition =
     { orientation = definition.orientation
     , top = definition.top
     , height = definition.height
     , left = definition.left
     , width = definition.width
-    , movie = Movie.findById definition.movieId
+    , movie = Movie.findById (Movie.fromCollection collection) definition.movieId
     , mode = Showing
     }
 
 
-gridMoviesFromUrlString : String -> List GridMovie
-gridMoviesFromUrlString =
-    String.split "," >> List.filterMap (MovieParser.parseMovie >> resultToMaybe) >> List.map hydrate
+gridMoviesFromUrlString : String -> String -> List GridMovie
+gridMoviesFromUrlString collectionName movieId =
+    movieId |> String.split "," |> List.filterMap (MovieParser.parseMovie >> resultToMaybe) |> List.map (hydrate collectionName)
 
 
 frameToString : GridMovie -> String
@@ -79,4 +90,4 @@ framesUrlString frames =
 
 toUrl : Model -> String
 toUrl model =
-    "?movies=" ++ (framesUrlString model.movies)
+    "?movies=" ++ (framesUrlString model.movies) ++ "&collection=" ++ model.collection
