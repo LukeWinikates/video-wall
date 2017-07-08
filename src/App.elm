@@ -21,11 +21,13 @@ import Dragging exposing (..)
 import List.Extra
 
 
--- TODO: clock on an empty space to insert horizontal or vertical video
--- TODO: see if there are bugs with dragging (easier to tell once performance is addressed by pausing). It looks to me like maybe the drag end makes the position jump.
--- TODO I'm interested in a snap-to-grid style, and maybe that also offers a solution?
--- TODO: there seem to be lingering framerate problems. I wonder how I can diagnose.
-
+-- TODO: click on an empty space to insert horizontal or vertical video
+-- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
+-- TODO: fix the bug where position jumps when you click the drag handle
+-- TODO: adding video experience is not very good
+-- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
+-- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
+-- TODO: finally deploy somewhere
 
 colors =
     { thunder = "#3A3238"
