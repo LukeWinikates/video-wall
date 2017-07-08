@@ -64,6 +64,39 @@ movies =
             , { id = "6394", orientation = Vertical, description = "The stream turns here" }
             ]
           )
+        , ( "sanjuan"
+          , [ { id = "6443", orientation = Horizontal, description = "Big wide bay" }
+            , { id = "6444", orientation = Vertical, description = "Sun in tree" }
+            , { id = "6447", orientation = Horizontal, description = "Island with tree in foreground" }
+            , { id = "6450", orientation = Vertical, description = "Looking down onto rocks" }
+            , { id = "6451", orientation = Vertical, description = "Island with rocks way out there" }
+            , { id = "6452", orientation = Vertical, description = "Mostly underwater rock" }
+            , { id = "6453", orientation = Vertical, description = "Soft waves on rocks" }
+            , { id = "6456", orientation = Vertical, description = "Red light in the trees" }
+            , { id = "6467", orientation = Vertical, description = "Made it to the beach" }
+            , { id = "6468", orientation = Horizontal, description = "Kayaks in the offing" }
+            , { id = "6469", orientation = Horizontal, description = "Pebbles getting smoother" }
+            , { id = "6473", orientation = Vertical, description = "Yellow flower blue water" }
+            , { id = "6474", orientation = Vertical, description = "Flower and the beach" }
+            , { id = "6475", orientation = Vertical, description = "Rocky spit" }
+            , { id = "6476", orientation = Vertical, description = "Looking at the water from the shade" }
+            , { id = "6478", orientation = Vertical, description = "Looking at the water from the shade 2" }
+            , { id = "6485", orientation = Vertical, description = "Flower and very clear water" }
+            , { id = "6486", orientation = Vertical, description = "Flower and very clear water 2" }
+            , { id = "6487", orientation = Horizontal, description = "Just the water really" }
+            , { id = "6488", orientation = Horizontal, description = "Cliff, and sounds" }
+            , { id = "6492", orientation = Vertical, description = "Probably the gentlest waves there are" }
+            , { id = "6493", orientation = Horizontal, description = "Probably the gentlest waves there are 2" }
+            , { id = "6498", orientation = Vertical, description = "Crook of the tree" }
+            , { id = "6504", orientation = Vertical, description = "View from the lime kiln" }
+            , { id = "6505", orientation = Horizontal, description = "Looking at the water from the shade 3" }
+            , { id = "6506", orientation = Vertical, description = "Branches/Horizon" }
+            , { id = "6507", orientation = Horizontal, description = "Still hours to nightfall" }
+            , { id = "6531", orientation = Vertical, description = "Are ferries slow or fast?" }
+            , { id = "6532", orientation = Horizontal, description = "View from the car" }
+            , { id = "6533", orientation = Horizontal, description = "Island view from the ferry" }
+            ]
+          )
         ]
 
 
