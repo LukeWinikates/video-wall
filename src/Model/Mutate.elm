@@ -9,15 +9,11 @@ import List exposing (map)
 import Mouse exposing (Position)
 
 
--- TODO: instead of a bunch of helpers of pattern changeMovieAtIndex + movie update function,
--- just pull expose all the movie update functions at the top level.
--- or could define each thing as a mapping from a command to a mutation for an index and a mutation for all movies
--- { updateMovie = swap idx movie, updateAll = changeMode showing }
-
 type alias Dimension =
     { width : Int
     , height : Int
     }
+
 
 changeMode : VideoMode -> GridMovie -> GridMovie
 changeMode mode gridMovie =
@@ -39,10 +35,9 @@ applyAtIndex f index model =
     }
 
 
-swapMovie : Model -> Int -> Movie -> Model
-swapMovie model index newMovie =
-    applyAtIndex (\m -> { m | movie = Just newMovie }) index model
-        |> applyAll (changeMode Showing)
+setMovie : Movie -> GridMovie -> GridMovie
+setMovie newMovie gridMovie =
+    { gridMovie | movie = Just newMovie }
 
 
 dimension : Scale -> Orientation -> Dimension
@@ -83,7 +78,10 @@ resize scale index =
 
 changePosition : Position -> GridMovie -> GridMovie
 changePosition offset gridMovie =
-    { gridMovie | top = gridMovie.top + offset.y, left = gridMovie.left + offset.x }
+    { gridMovie
+        | top = gridMovie.top + offset.y
+        , left = gridMovie.left + offset.x
+    }
 
 
 drag : Maybe (Drag Int) -> Model -> Model

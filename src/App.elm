@@ -16,7 +16,7 @@ import MovieParser exposing (..)
 import Json.Decode
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (applyAtIndex, changeMode, changePosition, drag, newMovie, resize, swapMovie)
+import Model.Mutate exposing (applyAll, applyAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie)
 import Dragging exposing (..)
 import List.Extra
 
@@ -109,7 +109,9 @@ update action model =
     in
         case action of
             Swap index newMovie ->
-                wrap (swapMovie model index newMovie)
+                wrap <|
+                    applyAll (changeMode Showing) <|
+                        (applyAtIndex (setMovie newMovie) index model)
 
             ChangeMode mode index ->
                 wrap (applyAtIndex (changeMode mode) index model)
