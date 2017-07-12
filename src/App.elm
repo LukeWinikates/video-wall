@@ -27,6 +27,7 @@ import List.Extra
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
 -- TODO: finally deploy somewhere
+-- TODO: maybe make final position snap to grid when dragging / updating url
 
 
 colors =
@@ -259,15 +260,27 @@ px =
     toString >> (flip (++) "px")
 
 
+snap : Int -> Int
+snap value =
+    (round (toFloat value / 20)) * 20
+
+
+
+-- draw relevant gridlines.
+-- when within 10 px of a gridline (left, vcenter, right, hcenter, top, bottom), show a
+--- dotted line indicating that they might want to snap to this
+-- or... snap to gridline on drop.
+
+
 gridMovieView : Model -> Int -> GridMovie -> Html Msg
 gridMovieView model index gridMovie =
     div
         [ (style
             [ ( "position", "absolute" )
-            , ( "left", gridMovie.left |> px )
-            , ( "width", gridMovie.width |> px )
-            , ( "top", gridMovie.top |> px )
-            , ( "height", gridMovie.height |> px )
+            , ( "left", gridMovie.left |> snap |> px )
+            , ( "width", gridMovie.width |> snap |> px )
+            , ( "top", gridMovie.top |> snap |> px )
+            , ( "height", gridMovie.height |> snap |> px )
             , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
