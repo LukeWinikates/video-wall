@@ -23,11 +23,11 @@ import List.Extra
 
 -- TODO: click on an empty space to insert horizontal or vertical video
 -- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
--- TODO: fix the bug where position jumps when you click the drag handle
 -- TODO: adding video experience is not very good
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
 -- TODO: finally deploy somewhere
+
 
 colors =
     { thunder = "#3A3238"
@@ -120,8 +120,8 @@ update action model =
                 Dragging.map event
                     index
                     model.dragging
-                    (\position newDrag ->
-                        (applyAtIndex (changePosition position) index model)
+                    (\offset newDrag ->
+                        (applyAtIndex (changePosition offset) index model)
                             |> drag newDrag
                     )
                     |> wrapDrag typ

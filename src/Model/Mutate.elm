@@ -14,6 +14,10 @@ import Mouse exposing (Position)
 -- or could define each thing as a mapping from a command to a mutation for an index and a mutation for all movies
 -- { updateMovie = swap idx movie, updateAll = changeMode showing }
 
+type alias Dimension =
+    { width : Int
+    , height : Int
+    }
 
 changeMode : VideoMode -> GridMovie -> GridMovie
 changeMode mode gridMovie =
@@ -39,12 +43,6 @@ swapMovie : Model -> Int -> Movie -> Model
 swapMovie model index newMovie =
     applyAtIndex (\m -> { m | movie = Just newMovie }) index model
         |> applyAll (changeMode Showing)
-
-
-type alias Dimension =
-    { width : Int
-    , height : Int
-    }
 
 
 dimension : Scale -> Orientation -> Dimension
@@ -84,8 +82,8 @@ resize scale index =
 
 
 changePosition : Position -> GridMovie -> GridMovie
-changePosition pos gridMovie =
-    { gridMovie | top = pos.y, left = pos.x }
+changePosition offset gridMovie =
+    { gridMovie | top = gridMovie.top + offset.y, left = gridMovie.left + offset.x }
 
 
 drag : Maybe (Drag Int) -> Model -> Model

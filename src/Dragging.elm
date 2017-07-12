@@ -15,7 +15,6 @@ type DragEvent
 
 type alias Drag draggedThingState =
     { current : { x : Int, y : Int }
-    , start : { x : Int, y : Int }
     , state : draggedThingState
     }
 
@@ -28,21 +27,20 @@ subs maybeDrag f =
 
         Just { state } ->
             Sub.batch
-                [ Mouse.moves (\p -> (f state (DragEvent Start p)))
+                [ Mouse.moves (\p -> (f state (DragEvent Move p)))
                 , Mouse.ups (\p -> (f state (DragEvent End p)))
                 ]
 
 
 
--- TODO: it feels like the dragged state is not really working all that well,
--- since it still needs to be passed through here.
+-- TODO: can the drag state be avoided somehow? can it be eliminated from the model, moved into the event?
 
 
 updateDrag : DragEvent -> a -> Maybe (Drag a) -> Maybe (Drag a)
 updateDrag (DragEvent typ position) state maybeDrag =
     case typ of
         Start ->
-            Just { current = position, start = position, state = state }
+            Just { current = position, state = state }
 
         Move ->
             Maybe.map (\drag -> { drag | current = position })
@@ -58,9 +56,9 @@ map ((DragEvent typ position) as event) state maybeDrag f =
         |> case ( typ, maybeDrag ) of
             ( Move, Just drag ) ->
                 f
-                    { y = position.y + drag.current.y - drag.start.y
-                    , x = position.x + drag.current.x - drag.start.x
+                    { y = position.y - drag.current.y
+                    , x = position.x - drag.current.x
                     }
 
             _ ->
-                f position
+                f { y = 0, x = 0 }
