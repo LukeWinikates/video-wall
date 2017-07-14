@@ -256,14 +256,6 @@ videoTagView model index movie =
         []
 
 
-frameView : Model -> GridMovie -> Int -> Html Msg
-frameView model gridMovie index =
-    div [ (onMouseEnter (ChangeMode Buttons index)), (onMouseLeave (ChangeMode Showing index)) ]
-        ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
-            ++ (helperViews model.collectionMovies gridMovie index)
-        )
-
-
 px : a -> String
 px =
     toString >> (flip (++) "px")
@@ -303,8 +295,12 @@ gridMovieView model index gridMovie =
               )
             ]
           )
+        , (onMouseEnter (ChangeMode Buttons index))
+        , (onMouseLeave (ChangeMode Showing index))
         ]
-        [ frameView model gridMovie index ]
+        ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
+            ++ (helperViews model.collectionMovies gridMovie index)
+        )
 
 
 view : Model -> Html Msg
