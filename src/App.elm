@@ -3,8 +3,9 @@ module App exposing (..)
 import Color
 import FontAwesome
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
-import Html.Attributes exposing (autoplay, height, href, loop, src, style)
+import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Html.Events exposing (..)
+import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
 import Mouse exposing (Position)
@@ -21,12 +22,12 @@ import Dragging exposing (..)
 import List.Extra
 
 
+-- TODO: something for saving curated collections/switching between collections, ala codepen
 -- TODO: click on an empty space to insert horizontal or vertical video
 -- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
 -- TODO: adding video experience is not very good
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
--- TODO: finally deploy somewhere
 -- TODO: maybe make final position snap to grid when dragging / updating url
 
 
@@ -174,6 +175,11 @@ onMouseDownWithDecoder f =
     on "mousedown" (Json.Decode.map f Mouse.position)
 
 
+volume : Float -> Attribute msg
+volume vol =
+    (property "volume" (Json.Encode.string <| toString <| vol))
+
+
 dragButton : (Mouse.Position -> Msg) -> Html Msg -> Html Msg
 dragButton msg icon =
     button
@@ -230,6 +236,7 @@ videoTagView model index movie =
         [ (loop True)
         , (onClick (ChangeMode Menu index))
         , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
+        , (volume 0.2)
         , (style
             [ ( case movie.orientation of
                     Horizontal ->
