@@ -9,6 +9,12 @@ import List exposing (map)
 import Mouse exposing (Position)
 
 
+type Mutation
+    = Swap Movie
+    | Resize Scale
+    | ChangeMode VideoMode
+
+
 type alias Dimension =
     { width : Int
     , height : Int
@@ -33,6 +39,23 @@ applyAtIndex f index model =
                 |> List.Extra.updateAt index f
                 |> Maybe.withDefault model.movies
     }
+
+
+applyMutationAtIndex : Mutation -> Int -> Model -> Model
+applyMutationAtIndex mutation index model =
+    applyAtIndex
+        (case mutation of
+            Swap movie ->
+                setMovie movie
+
+            Resize scale ->
+                resizeMovie scale
+
+            ChangeMode mode ->
+                changeMode mode
+        )
+        index
+        (applyAll (changeMode Showing) model)
 
 
 setMovie : Movie -> GridMovie -> GridMovie

@@ -17,7 +17,7 @@ import MovieParser exposing (..)
 import Json.Decode
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (applyAll, applyAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie)
 import Dragging exposing (..)
 import List.Extra
 
@@ -79,10 +79,8 @@ modelFrom (AppRoute maybeCollection maybeMovies) =
 
 
 type Msg
-    = ChangeMode VideoMode Int
-    | Swap Int Movie
+    = ChangeMovie Mutation Int
     | UrlChange Navigation.Location
-    | Resize Scale Int
     | NewMovie Orientation
     | DragMovie Int DragEvent
 
@@ -109,16 +107,8 @@ update action model =
             ( model, model |> toUrl |> Navigation.modifyUrl )
     in
         case action of
-            Swap index newMovie ->
-                wrap <|
-                    applyAll (changeMode Showing) <|
-                        (applyAtIndex (setMovie newMovie) index model)
-
-            ChangeMode mode index ->
-                wrap (applyAtIndex (changeMode mode) index model)
-
-            Resize scale index ->
-                wrap (resize scale index model)
+            ChangeMovie mutation index ->
+                wrap (applyMutationAtIndex mutation index model)
 
             DragMovie index ((DragEvent typ _) as event) ->
                 Dragging.map event
@@ -141,7 +131,7 @@ movieItem : Int -> Movie -> Html Msg
 movieItem index subject =
     li [ (style [ ( "padding", "4px" ) ]) ]
         [ a
-            [ onClick (Swap index subject)
+            [ onClick (ChangeMovie (Swap subject) index)
             , (href "#")
             , (style
                 [ ( "color", colors.thunder )
@@ -201,9 +191,9 @@ helperViews collectionMovies gridMovie index =
         Buttons ->
             [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
                 [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows Color.darkGray 12)
-                , changeButton (Resize Small index) (text "S")
-                , changeButton (Resize Medium index) (text "M")
-                , changeButton (Resize Large index) (text "L")
+                , changeButton (ChangeMovie (Resize Small) index) (text "S")
+                , changeButton (ChangeMovie (Resize Medium) index) (text "M")
+                , changeButton (ChangeMovie (Resize Large) index) (text "L")
                 ]
             ]
 
@@ -234,7 +224,7 @@ videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
         [ (loop True)
-        , (onClick (ChangeMode Menu index))
+        , (onClick (ChangeMovie (ChangeMode Menu) index))
         , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
         , (volume 0.2)
         , (style
@@ -295,8 +285,8 @@ gridMovieView model index gridMovie =
               )
             ]
           )
-        , (onMouseEnter (ChangeMode Buttons index))
-        , (onMouseLeave (ChangeMode Showing index))
+        , (onMouseEnter (ChangeMovie (ChangeMode Buttons) index))
+        , (onMouseLeave (ChangeMovie (ChangeMode Showing) index))
         ]
         ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
             ++ (helperViews model.collectionMovies gridMovie index)
