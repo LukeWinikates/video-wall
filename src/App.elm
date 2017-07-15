@@ -23,12 +23,12 @@ import List.Extra
 
 
 -- TODO: something for saving curated collections/switching between collections, ala codepen
--- TODO: click on an empty space to insert horizontal or vertical video
--- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
--- TODO: adding video experience is not very good
--- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
+-- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
 -- TODO: maybe make final position snap to grid when dragging / updating url
+-- TODO: adding video experience is not very good
+-- TODO: click on an empty space to insert horizontal or vertical video
+-- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 
 
 colors =
@@ -154,8 +154,8 @@ movieItem index subject =
         ]
 
 
-changeButton : Msg -> String -> Html Msg
-changeButton msg t =
+changeButton : Msg -> Html Msg -> Html Msg
+changeButton msg content =
     button
         [ (onClick msg)
         , style
@@ -166,18 +166,8 @@ changeButton msg t =
             , ( "padding", "5px 10px" )
             ]
         ]
-        [ (text t)
+        [ content
         ]
-
-
-onMouseDownWithDecoder : (Mouse.Position -> Msg) -> Attribute Msg
-onMouseDownWithDecoder f =
-    on "mousedown" (Json.Decode.map f Mouse.position)
-
-
-volume : Float -> Attribute msg
-volume vol =
-    (property "volume" (Json.Encode.string <| toString <| vol))
 
 
 dragButton : (Mouse.Position -> Msg) -> Html Msg -> Html Msg
@@ -195,15 +185,25 @@ dragButton msg icon =
         [ icon ]
 
 
+onMouseDownWithDecoder : (Mouse.Position -> Msg) -> Attribute Msg
+onMouseDownWithDecoder f =
+    on "mousedown" (Json.Decode.map f Mouse.position)
+
+
+volume : Float -> Attribute msg
+volume vol =
+    (property "volume" (Json.Encode.string <| toString <| vol))
+
+
 helperViews : List Movie -> GridMovie -> Int -> List (Html Msg)
 helperViews collectionMovies gridMovie index =
     case gridMovie.mode of
         Buttons ->
             [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
                 [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows Color.darkGray 12)
-                , changeButton (Resize Small index) "S"
-                , changeButton (Resize Medium index) "M"
-                , changeButton (Resize Large index) "L"
+                , changeButton (Resize Small index) (text "S")
+                , changeButton (Resize Medium index) (text "M")
+                , changeButton (Resize Large index) (text "L")
                 ]
             ]
 
@@ -323,6 +323,6 @@ view model =
               )
             ]
             (indexedMap (gridMovieView model) model.movies)
-        , changeButton (NewMovie Vertical) "+Vertical"
-        , changeButton (NewMovie Horizontal) "+Horizontal"
+        , changeButton (NewMovie Vertical) (text "+Vertical")
+        , changeButton (NewMovie Horizontal) (text "+Horizontal")
         ]
