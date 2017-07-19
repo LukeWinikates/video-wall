@@ -14,6 +14,7 @@ type Mutation
     | Resize Scale
     | ChangeMode VideoMode
     | Rotate Orientation
+    | ToggleMenu Bool
 
 
 type alias Dimension =
@@ -27,9 +28,19 @@ changeMode mode gridMovie =
     { gridMovie | mode = mode }
 
 
+toggleMenu : Bool -> GridMovie -> GridMovie
+toggleMenu bool gridMovie =
+    { gridMovie | menu = bool }
+
+
 rotate : Orientation -> GridMovie -> GridMovie
 rotate oldOrientation gridMovie =
-    { gridMovie | orientation = Geometry.flipOrientation oldOrientation, mode = Menu, movie = Nothing }
+    { gridMovie
+        | orientation = Geometry.flipOrientation oldOrientation
+        , mode = Menu
+        , movie = Nothing
+    }
+        |> resizeMovie Large
 
 
 applyAll : (GridMovie -> GridMovie) -> Model -> Model
@@ -52,19 +63,22 @@ applyMutationAtIndex mutation index model =
     applyAtIndex
         (case mutation of
             Swap movie ->
-                setMovie movie
+                setMovie movie >> (toggleMenu False) >> (changeMode Showing)
 
             Resize scale ->
-                resizeMovie scale
+                resizeMovie scale >> (toggleMenu False)
 
             ChangeMode mode ->
-                changeMode mode
+                changeMode mode >> (toggleMenu (mode /= Showing))
 
             Rotate currentOrientation ->
                 rotate currentOrientation
+
+            ToggleMenu bool ->
+                toggleMenu bool
         )
         index
-        (applyAll (changeMode Showing) model)
+        model
 
 
 setMovie : Movie -> GridMovie -> GridMovie
@@ -133,6 +147,7 @@ newMovie orientation model =
                      , width = 350
                      , movie = Nothing
                      , mode = Menu
+                     , menu = False
                      }
                    ]
     }

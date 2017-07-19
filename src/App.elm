@@ -29,6 +29,7 @@ import List.Extra
 -- TODO: adding video experience is not very good
 -- TODO: click on an empty space to insert horizontal or vertical video
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
+-- TODO: because the scale is not captured directly, and is instead encoded as the height/width measure, when the movie gets rotated it's not easy to go from height/width back to scale, and preserving scale is more annoying than it should be. Save the scale instead of the height/width.
 
 
 colors =
@@ -185,21 +186,29 @@ volume vol =
     (property "volume" (Json.Encode.string <| toString <| vol))
 
 
+consIf : Bool -> a -> List a -> List a
+consIf condition item items =
+    if condition then
+        items ++ [ item ]
+    else
+        items
+
+
 helperViews : List Movie -> GridMovie -> Int -> List (Html Msg)
 helperViews collectionMovies gridMovie index =
-    case gridMovie.mode of
-        Buttons ->
-            [ div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
+    []
+        |> consIf gridMovie.menu
+            (div
+                [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
                 [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows Color.darkGray 12)
                 , changeButton (ChangeMovie (Resize Small) index) (text "S")
                 , changeButton (ChangeMovie (Resize Medium) index) (text "M")
                 , changeButton (ChangeMovie (Resize Large) index) (text "L")
                 , changeButton (ChangeMovie (Rotate gridMovie.orientation) index) (FontAwesome.undo Color.darkGray 12)
                 ]
-            ]
-
-        Menu ->
-            [ ul
+            )
+        |> consIf (gridMovie.mode == Menu)
+            (ul
                 [ (style
                     [ ( "background-color", colors.platinum )
                     , ( "width", "80%" )
@@ -215,10 +224,7 @@ helperViews collectionMovies gridMovie index =
                   )
                 ]
                 (List.map (movieItem index) (byOrientation collectionMovies gridMovie.orientation))
-            ]
-
-        Showing ->
-            []
+            )
 
 
 videoTagView : Model -> Int -> Movie -> Html Msg
@@ -277,16 +283,14 @@ gridMovieView model index gridMovie =
             , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
             , ( "z-index"
-              , case gridMovie.mode of
-                    Buttons ->
-                        "20"
-
-                    _ ->
-                        "0"
+              , if gridMovie.menu then
+                    "20"
+                else
+                    "0"
               )
             ]
           )
-        , (onMouseEnter (ChangeMovie (ChangeMode Buttons) index))
+        , (onMouseEnter (ChangeMovie (ToggleMenu True) index))
         , (onMouseLeave (ChangeMovie (ChangeMode Showing) index))
         ]
         ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])

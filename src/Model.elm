@@ -16,6 +16,7 @@ type alias GridMovie =
     , width : Int
     , mode : VideoMode
     , movie : Maybe Movie
+    , menu : Bool
     }
 
 
@@ -36,7 +37,6 @@ type Scale
 type VideoMode
     = Menu
     | Showing
-    | Buttons
 
 
 empty : Model
@@ -57,6 +57,7 @@ hydrate collection definition =
     , width = definition.width
     , movie = Movie.findById (Movie.fromCollection collection) definition.movieId
     , mode = Showing
+    , menu = False
     }
 
 
