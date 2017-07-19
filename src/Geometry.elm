@@ -1,4 +1,4 @@
-module Geometry exposing (Point, Orientation(..))
+module Geometry exposing (Point, Orientation(..), flipOrientation)
 
 
 type alias Point =
@@ -8,3 +8,11 @@ type alias Point =
 type Orientation
     = Horizontal
     | Vertical
+
+
+flipOrientation : Orientation -> Orientation
+flipOrientation orientation =
+    if orientation == Horizontal then
+        Vertical
+    else
+        Horizontal

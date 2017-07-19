@@ -194,6 +194,7 @@ helperViews collectionMovies gridMovie index =
                 , changeButton (ChangeMovie (Resize Small) index) (text "S")
                 , changeButton (ChangeMovie (Resize Medium) index) (text "M")
                 , changeButton (ChangeMovie (Resize Large) index) (text "L")
+                , changeButton (ChangeMovie (Rotate gridMovie.orientation) index) (FontAwesome.undo Color.darkGray 12)
                 ]
             ]
 

@@ -13,6 +13,7 @@ type Mutation
     = Swap Movie
     | Resize Scale
     | ChangeMode VideoMode
+    | Rotate Orientation
 
 
 type alias Dimension =
@@ -24,6 +25,11 @@ type alias Dimension =
 changeMode : VideoMode -> GridMovie -> GridMovie
 changeMode mode gridMovie =
     { gridMovie | mode = mode }
+
+
+rotate : Orientation -> GridMovie -> GridMovie
+rotate oldOrientation gridMovie =
+    { gridMovie | orientation = Geometry.flipOrientation oldOrientation, mode = Menu, movie = Nothing }
 
 
 applyAll : (GridMovie -> GridMovie) -> Model -> Model
@@ -53,6 +59,9 @@ applyMutationAtIndex mutation index model =
 
             ChangeMode mode ->
                 changeMode mode
+
+            Rotate currentOrientation ->
+                rotate currentOrientation
         )
         index
         (applyAll (changeMode Showing) model)
