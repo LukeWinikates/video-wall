@@ -17,7 +17,7 @@ import MovieParser exposing (..)
 import Json.Decode
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie, remove)
 import Dragging exposing (..)
 import List.Extra
 
@@ -84,6 +84,7 @@ type Msg
     | UrlChange Navigation.Location
     | NewMovie Orientation
     | DragMovie Int DragEvent
+    | Remove Int
 
 
 subscriptions : Model -> Sub Msg
@@ -110,6 +111,9 @@ update action model =
         case action of
             ChangeMovie mutation index ->
                 wrap (applyMutationAtIndex mutation index model)
+
+            Remove index ->
+                wrap (remove index model)
 
             DragMovie index ((DragEvent typ _) as event) ->
                 Dragging.map event
@@ -205,6 +209,7 @@ helperViews collectionMovies gridMovie index =
                 , changeButton (ChangeMovie (Resize Medium) index) (text "M")
                 , changeButton (ChangeMovie (Resize Large) index) (text "L")
                 , changeButton (ChangeMovie (Rotate gridMovie.orientation) index) (FontAwesome.undo Color.darkGray 12)
+                , changeButton (Remove index) (FontAwesome.close Color.darkGray 12)
                 ]
             )
         |> consIf (gridMovie.mode == Menu)

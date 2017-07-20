@@ -48,6 +48,11 @@ applyAll f m =
     { m | movies = List.map f m.movies }
 
 
+remove : Int -> Model -> Model
+remove index model =
+    { model | movies = List.Extra.removeAt index model.movies }
+
+
 applyAtIndex : (GridMovie -> GridMovie) -> Int -> Model -> Model
 applyAtIndex f index model =
     { model
