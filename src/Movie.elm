@@ -15,7 +15,7 @@ type alias Movie =
 
 byOrientation : List Movie -> Orientation -> List Movie
 byOrientation movies orientation =
-    List.filter (\m -> (m.orientation == orientation)) movies |> Debug.log "movie"
+    List.filter (\m -> (m.orientation == orientation)) movies
 
 
 fromCollection : String -> List Movie
