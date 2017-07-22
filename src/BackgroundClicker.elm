@@ -17,9 +17,7 @@ decodePosition =
 onClickElementWithId : String -> Decoder a -> (a -> msg) -> Attribute msg
 onClickElementWithId intendedId newDecoder f =
     onWithOptions "click"
-        { stopPropagation = True
-        , preventDefault = True
-        }
+        Html.Events.defaultOptions
         ((Json.Decode.at [ "target", "id" ] Json.Decode.string)
             |> (Json.Decode.andThen
                     (\id ->
