@@ -1,5 +1,6 @@
 module App exposing (..)
 
+import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
 import FontAwesome
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
@@ -32,7 +33,6 @@ import List.Extra
 -- TODO: make the colors for the buttons match and look good where they're located
 -- TODO: maybe refactor out the color parameter (ie. hide it with a wrapper function) and use css to set the fill on the icon
 -- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
--- TODO: eliminate frustrating Noop Msg - maybe there's a way to do this through a decoder that fails or turns into a maybe?
 
 
 colors =
@@ -88,7 +88,6 @@ type Msg
     | NewMovie Orientation Scale Position
     | DragMovie Int DragEvent
     | Remove Int
-    | Noop
 
 
 subscriptions : Model -> Sub Msg
@@ -131,9 +130,6 @@ update action model =
 
             NewMovie orientation size position ->
                 wrap (newMovie orientation size position model)
-
-            Noop ->
-                ( model, Cmd.none )
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -311,39 +307,13 @@ gridMovieView model index gridMovie =
         )
 
 
-type alias IdAndPoint =
-    { id : String, x : Int, y : Int }
-
-
-clickIdAndPosition : Decoder IdAndPoint
-clickIdAndPosition =
-    Json.Decode.map3
-        IdAndPoint
-        (Json.Decode.at [ "target", "id" ] Json.Decode.string)
-        (Json.Decode.field "pageX" Json.Decode.int)
-        (Json.Decode.field "pageY" Json.Decode.int)
-
-
-onlyIfIdMatch : String -> IdAndPoint -> Msg
-onlyIfIdMatch intendedId { id, x, y } =
-    if intendedId == id then
-        (NewMovie Vertical Large { x = x, y = y })
-    else
-        Noop
-
-
 view : Model -> Html Msg
 view model =
     body
         []
         [ div
             [ Html.Attributes.id "background"
-            , (onWithOptions "click"
-                { stopPropagation = True
-                , preventDefault = True
-                }
-                (Json.Decode.map (onlyIfIdMatch "background") clickIdAndPosition)
-              )
+            , (onClickElementWithId "background" decodePosition (NewMovie Vertical Large))
             , (style
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )
