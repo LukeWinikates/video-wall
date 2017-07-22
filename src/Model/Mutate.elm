@@ -140,16 +140,16 @@ drag maybeDrag model =
     { model | dragging = maybeDrag }
 
 
-newMovie : Orientation -> Model -> Model
-newMovie orientation model =
+newMovie : Orientation -> Scale -> Position -> Model -> Model
+newMovie orientation scale position model =
     { model
         | movies =
             model.movies
                 ++ [ { orientation = orientation
-                     , top = 500
-                     , height = 1000
-                     , left = 50
-                     , width = 350
+                     , top = position.y
+                     , left = position.x
+                     , height = (dimension scale orientation).height
+                     , width = (dimension scale orientation).width
                      , movie = Nothing
                      , mode = Menu
                      , menu = False

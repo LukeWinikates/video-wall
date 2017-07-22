@@ -14,7 +14,7 @@ import Navigation exposing (..)
 import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
 import MovieParser exposing (..)
-import Json.Decode
+import Json.Decode exposing (Decoder)
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie, remove)
@@ -23,13 +23,16 @@ import List.Extra
 
 
 -- TODO: something for saving curated collections/switching between collections, ala codepen
+-- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
 -- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
 -- TODO: maybe make final position snap to grid when dragging / updating url
--- TODO: adding video experience is not very good
--- TODO: click on an empty space to insert horizontal or vertical video
--- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: because the scale is not captured directly, and is instead encoded as the height/width measure, when the movie gets rotated it's not easy to go from height/width back to scale, and preserving scale is more annoying than it should be. Save the scale instead of the height/width.
+-- TODO: when being dragged, the dragged item should have the highest z-index.
+-- TODO: make the colors for the buttons match and look good where they're located
+-- TODO: maybe refactor out the color parameter (ie. hide it with a wrapper function) and use css to set the fill on the icon
+-- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
+-- TODO: eliminate frustrating Noop Msg - maybe there's a way to do this through a decoder that fails or turns into a maybe?
 
 
 colors =
@@ -82,9 +85,10 @@ modelFrom (AppRoute maybeCollection maybeMovies) =
 type Msg
     = ChangeMovie Mutation Int
     | UrlChange Navigation.Location
-    | NewMovie Orientation
+    | NewMovie Orientation Scale Position
     | DragMovie Int DragEvent
     | Remove Int
+    | Noop
 
 
 subscriptions : Model -> Sub Msg
@@ -125,8 +129,11 @@ update action model =
                     )
                     |> wrapDrag typ
 
-            NewMovie orientation ->
-                wrap (newMovie orientation model)
+            NewMovie orientation size position ->
+                wrap (newMovie orientation size position model)
+
+            Noop ->
+                ( model, Cmd.none )
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -152,7 +159,7 @@ movieItem index subject =
 changeButton : Msg -> Html Msg -> Html Msg
 changeButton msg content =
     button
-        [ (onClick msg)
+        [ onClick msg
         , style
             [ ( "background-color", colors.mistyRose )
             , ( "border-radius", "2px" )
@@ -216,7 +223,8 @@ helperViews collectionMovies gridMovie index =
             (ul
                 [ (style
                     [ ( "background-color", colors.platinum )
-                    , ( "width", "80%" )
+                    , ( "width", "100%" )
+                    , ( "height", "100%" )
                     , ( "padding", "10px" )
                     , ( "border", "10px solid " ++ colors.thunder )
                     , ( "border-radius", "2px" )
@@ -303,15 +311,40 @@ gridMovieView model index gridMovie =
         )
 
 
+type alias IdAndPoint =
+    { id : String, x : Int, y : Int }
+
+
+clickIdAndPosition : Decoder IdAndPoint
+clickIdAndPosition =
+    Json.Decode.map3
+        IdAndPoint
+        (Json.Decode.at [ "target", "id" ] Json.Decode.string)
+        (Json.Decode.field "pageX" Json.Decode.int)
+        (Json.Decode.field "pageY" Json.Decode.int)
+
+
+onlyIfIdMatch : String -> IdAndPoint -> Msg
+onlyIfIdMatch intendedId { id, x, y } =
+    if intendedId == id then
+        (NewMovie Vertical Large { x = x, y = y })
+    else
+        Noop
+
+
 view : Model -> Html Msg
 view model =
     body
-        [ (style
-            []
-          )
-        ]
+        []
         [ div
-            [ (style
+            [ Html.Attributes.id "background"
+            , (onWithOptions "click"
+                { stopPropagation = True
+                , preventDefault = True
+                }
+                (Json.Decode.map (onlyIfIdMatch "background") clickIdAndPosition)
+              )
+            , (style
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )
                 , ( "width", "100vw" )
@@ -323,6 +356,4 @@ view model =
               )
             ]
             (indexedMap (gridMovieView model) model.movies)
-        , changeButton (NewMovie Vertical) (text "+Vertical")
-        , changeButton (NewMovie Horizontal) (text "+Horizontal")
         ]
