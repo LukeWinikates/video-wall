@@ -27,13 +27,17 @@ import List.Extra
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
 -- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
+-- TODO: draw gridlines by adding edges and center lines to a set, then creating lines for those as overlay view
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: because the scale is not captured directly, and is instead encoded as the height/width measure, when the movie gets rotated it's not easy to go from height/width back to scale, and preserving scale is more annoying than it should be. Save the scale instead of the height/width.
 -- TODO: when being dragged, the dragged item should have the highest z-index.
 -- TODO: make the colors for the buttons match and look good where they're located
 -- TODO: maybe refactor out the color parameter (ie. hide it with a wrapper function) and use css to set the fill on the icon
 -- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
-
+-- TODO: when creating a new video, first show size and orientation picker, then show video picker
+-- TODO: when creating a new video, the object is not a video yet - it's a pre-video
+-- TODO: menu for switching between collections
+-- TODO: modal video adder? scroll into view?
 
 colors =
     { thunder = "#3A3238"
