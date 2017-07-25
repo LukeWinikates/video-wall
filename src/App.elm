@@ -2,7 +2,7 @@ module App exposing (..)
 
 import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
-import DomHelpers exposing (px)
+import DomHelpers exposing (px, snap)
 import FontAwesome
 import GuideLines exposing (guideLines)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
@@ -38,7 +38,7 @@ import List.Extra
 -- TODO: when creating a new video, the object is not a video yet - it's a pre-video
 -- TODO: menu for switching between collections
 -- TODO: modal video adder? scroll into view?
-
+-- TODO: when should the snapping *actually* happen?
 
 colors =
     { hex =
@@ -280,11 +280,6 @@ videoTagView model index movie =
         , (autoplay True)
         ]
         []
-
-
-snap : Int -> Int
-snap value =
-    (round (toFloat value / 10)) * 10
 
 
 

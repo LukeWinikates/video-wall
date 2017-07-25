@@ -1,10 +1,16 @@
 module GuideLines exposing (guideLines)
 
-import DomHelpers exposing (px)
+import DomHelpers exposing (px, snap)
 import Model exposing (Model, GridMovie)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Set
+
+
+-- TODO: the lines don't seem to conform exactly to the actual positions of things
+-- TODO: the only show the lines while dragging
+-- TODO: only show the lines that are closest to the top, bottom, or center of the current thing
+-- TODO: exclude the currently dragged thing?
 
 
 horizontalLineView : Int -> Html msg
@@ -55,6 +61,7 @@ getVerticals : Model -> List Int
 getVerticals model =
     List.map leftCenterRight model.movies
         |> List.concat
+        |> List.map snap
         |> Set.fromList
         |> Set.toList
 
