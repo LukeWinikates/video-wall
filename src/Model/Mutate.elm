@@ -98,19 +98,19 @@ dimension scale orientation =
             { height = 340, width = 190 }
 
         ( Medium, Vertical ) ->
-            { height = 516, width = 290 }
+            { height = 520, width = 290 }
 
         ( Large, Vertical ) ->
-            { height = 640, width = 360 }
+            { height = 640, width = 370 }
 
         ( Small, Horizontal ) ->
             { height = 190, width = 340 }
 
         ( Medium, Horizontal ) ->
-            { height = 290, width = 516 }
+            { height = 290, width = 520 }
 
         ( Large, Horizontal ) ->
-            { height = 360, width = 640 }
+            { height = 370, width = 640 }
 
 
 resizeMovie : Scale -> GridMovie -> GridMovie

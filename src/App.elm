@@ -269,7 +269,7 @@ px =
 
 snap : Int -> Int
 snap value =
-    (round (toFloat value / 20)) * 20
+    (round (toFloat value / 10)) * 10
 
 
 
