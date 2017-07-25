@@ -284,12 +284,6 @@ videoTagView model index movie =
             []
 
 
-
--- when within 10 px of a gridline (left, vcenter, right, hcenter, top, bottom), show a
---- dotted line indicating that they might want to snap to this
--- or... snap to gridline on drop.
-
-
 gridMovieView : Model -> Int -> GridMovie -> Html Msg
 gridMovieView model index gridMovie =
     div
