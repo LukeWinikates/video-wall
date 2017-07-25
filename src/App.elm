@@ -242,7 +242,7 @@ videoTagView model index movie =
         [ (loop True)
         , (onClick (ChangeMovie (ChangeMode Menu) index))
         , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
-        , (volume 0.2)
+        , (volume 0.005)
         , (style
             [ ( case movie.orientation of
                     Horizontal ->
