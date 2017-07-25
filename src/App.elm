@@ -31,19 +31,26 @@ import List.Extra
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: because the scale is not captured directly, and is instead encoded as the height/width measure, when the movie gets rotated it's not easy to go from height/width back to scale, and preserving scale is more annoying than it should be. Save the scale instead of the height/width.
 -- TODO: when being dragged, the dragged item should have the highest z-index.
--- TODO: make the colors for the buttons match and look good where they're located
--- TODO: maybe refactor out the color parameter (ie. hide it with a wrapper function) and use css to set the fill on the icon
 -- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
 -- TODO: when creating a new video, first show size and orientation picker, then show video picker
 -- TODO: when creating a new video, the object is not a video yet - it's a pre-video
 -- TODO: menu for switching between collections
 -- TODO: modal video adder? scroll into view?
 
+
 colors =
-    { thunder = "#3A3238"
-    , platinum = "#E2E2E2"
-    , graniteGray = "#636B61"
-    , mistyRose = "#F5E3E0"
+    { hex =
+        { thunder = "#3A3238"
+        , platinum = "#E2E2E2"
+        , graniteGray = "#636B61"
+        , mistyRose = "#F5E3E0"
+        }
+    , color =
+        { thunder = Color.rgb 58 50 56
+        , platinum = Color.rgb 226 226 226
+        , graniteGray = Color.rgb 99 107 97
+        , mistyRose = Color.rgb 245 227 224
+        }
     }
 
 
@@ -146,7 +153,7 @@ movieItem index subject =
             [ onClick (ChangeMovie (Swap subject) index)
             , (href "#")
             , (style
-                [ ( "color", colors.thunder )
+                [ ( "color", colors.hex.thunder )
                 , ( "font-size", "18px" )
                 ]
               )
@@ -156,34 +163,37 @@ movieItem index subject =
         ]
 
 
+movieButton : List (Attribute Msg) -> List (Html Msg) -> Html Msg
+movieButton attributes content =
+    button
+        (attributes
+            ++ [ style
+                    [ ( "background-color", colors.hex.mistyRose )
+                    , ( "border-radius", "2px" )
+                    , ( "color", colors.hex.thunder )
+                    , ( "min-width", "3em" )
+                    , ( "font-weight", "bold" )
+                    , ( "height", "24px" )
+                    , ( "border", "none" )
+                    , ( "margin", "5px" )
+                    , ( "padding", "5px 10px" )
+                    ]
+               ]
+        )
+        content
+
+
 changeButton : Msg -> Html Msg -> Html Msg
 changeButton msg content =
-    button
-        [ onClick msg
-        , style
-            [ ( "background-color", colors.mistyRose )
-            , ( "border-radius", "2px" )
-            , ( "border", "none" )
-            , ( "margin", "5px" )
-            , ( "padding", "5px 10px" )
-            ]
-        ]
-        [ content
-        ]
+    movieButton
+        [ onClick msg ]
+        [ content ]
 
 
 dragButton : (Mouse.Position -> Msg) -> Html Msg -> Html Msg
 dragButton msg icon =
-    button
-        [ (onMouseDownWithDecoder msg)
-        , style
-            [ ( "background-color", colors.mistyRose )
-            , ( "border-radius", "2px" )
-            , ( "border", "none" )
-            , ( "margin", "5px" )
-            , ( "padding", "5px 10px" )
-            ]
-        ]
+    movieButton
+        [ onMouseDownWithDecoder msg ]
         [ icon ]
 
 
@@ -211,22 +221,26 @@ helperViews collectionMovies gridMovie index =
         |> consIf gridMovie.menu
             (div
                 [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
-                [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows Color.darkGray 12)
-                , changeButton (ChangeMovie (Resize Small) index) (text "S")
-                , changeButton (ChangeMovie (Resize Medium) index) (text "M")
-                , changeButton (ChangeMovie (Resize Large) index) (text "L")
-                , changeButton (ChangeMovie (Rotate gridMovie.orientation) index) (FontAwesome.undo Color.darkGray 12)
-                , changeButton (Remove index) (FontAwesome.close Color.darkGray 12)
+                [ div []
+                    [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows colors.color.thunder 12)
+                    , changeButton (ChangeMovie (Rotate gridMovie.orientation) index) (FontAwesome.undo colors.color.thunder 12)
+                    , changeButton (Remove index) (FontAwesome.close colors.color.thunder 12)
+                    ]
+                , div []
+                    [ changeButton (ChangeMovie (Resize Small) index) (text "S")
+                    , changeButton (ChangeMovie (Resize Medium) index) (text "M")
+                    , changeButton (ChangeMovie (Resize Large) index) (text "L")
+                    ]
                 ]
             )
         |> consIf (gridMovie.mode == Menu)
             (ul
                 [ (style
-                    [ ( "background-color", colors.platinum )
+                    [ ( "background-color", colors.hex.platinum )
                     , ( "width", "100%" )
                     , ( "height", "100%" )
                     , ( "padding", "10px" )
-                    , ( "border", "10px solid " ++ colors.thunder )
+                    , ( "border", "10px solid " ++ colors.hex.thunder )
                     , ( "border-radius", "2px" )
                     , ( "list-style", "none" )
                     , ( "margin", "auto" )
@@ -256,7 +270,7 @@ videoTagView model index movie =
                         "max-width"
               , "100%"
               )
-            , ( "border", "10px solid " ++ colors.thunder )
+            , ( "border", "10px solid " ++ colors.hex.thunder )
             , ( "border-radius", "2px" )
             , ( "margin", "auto" )
             ]
@@ -322,7 +336,7 @@ view model =
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )
                 , ( "width", "100vw" )
-                , ( "background-color", colors.graniteGray )
+                , ( "background-color", colors.hex.graniteGray )
                 , ( "display", "flex" )
                 , ( "justify-content", "center" )
                 , ( "align-items", "center" )
