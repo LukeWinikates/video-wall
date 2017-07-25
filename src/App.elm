@@ -29,7 +29,6 @@ import List.Extra
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
 -- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
--- TODO: draw gridlines by adding edges and center lines to a set, then creating lines for those as overlay view
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: because the scale is not captured directly, and is instead encoded as the height/width measure, when the movie gets rotated it's not easy to go from height/width back to scale, and preserving scale is more annoying than it should be. Save the scale instead of the height/width.
 -- TODO: when being dragged, the dragged item should have the highest z-index.
@@ -39,6 +38,7 @@ import List.Extra
 -- TODO: menu for switching between collections
 -- TODO: modal video adder? scroll into view?
 -- TODO: when should the snapping *actually* happen?
+
 
 colors =
     { hex =
@@ -258,28 +258,32 @@ helperViews collectionMovies gridMovie index =
 
 videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
-    video
-        [ (loop True)
-        , (onClick (ChangeMovie (ChangeMode Menu) index))
-        , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
-        , (volume 0.005)
-        , (style
-            [ ( case movie.orientation of
-                    Horizontal ->
-                        "max-height"
+    let
+        videoBorderWidth =
+            10
+    in
+        video
+            [ (loop True)
+            , (onClick (ChangeMovie (ChangeMode Menu) index))
+            , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
+            , (volume 0.005)
+            , (style
+                [ ( case movie.orientation of
+                        Horizontal ->
+                            "max-height"
 
-                    Vertical ->
-                        "max-width"
-              , "100%"
+                        Vertical ->
+                            "max-width"
+                  , "calc(100% - " ++ ((2 * videoBorderWidth) |> px) ++ ")"
+                  )
+                , ( "border", (videoBorderWidth |> px) ++ " solid " ++ colors.hex.thunder )
+                , ( "border-radius", "2px" )
+                , ( "margin", "auto" )
+                ]
               )
-            , ( "border", "10px solid " ++ colors.hex.thunder )
-            , ( "border-radius", "2px" )
-            , ( "margin", "auto" )
+            , (autoplay True)
             ]
-          )
-        , (autoplay True)
-        ]
-        []
+            []
 
 
 
@@ -298,7 +302,6 @@ gridMovieView model index gridMovie =
             , ( "width", gridMovie.width |> snap |> px )
             , ( "top", gridMovie.top |> snap |> px )
             , ( "height", gridMovie.height |> snap |> px )
-            , ( "padding", "5px" )
             , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
             , ( "z-index"
@@ -337,6 +340,11 @@ view model =
             ]
             (List.append
                 (indexedMap (gridMovieView model) model.movies)
-                (guideLines model)
+                ((Maybe.map
+                    (always (guideLines model))
+                    model.dragging
+                 )
+                    |> Maybe.withDefault []
+                )
             )
         ]
