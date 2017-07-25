@@ -2,7 +2,9 @@ module App exposing (..)
 
 import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
+import DomHelpers exposing (px)
 import FontAwesome
+import GuideLines exposing (guideLines)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Html.Events exposing (..)
@@ -280,11 +282,6 @@ videoTagView model index movie =
         []
 
 
-px : a -> String
-px =
-    toString >> (flip (++) "px")
-
-
 snap : Int -> Int
 snap value =
     (round (toFloat value / 10)) * 10
@@ -343,5 +340,8 @@ view model =
                 ]
               )
             ]
-            (indexedMap (gridMovieView model) model.movies)
+            (List.append
+                (indexedMap (gridMovieView model) model.movies)
+                (guideLines model)
+            )
         ]
