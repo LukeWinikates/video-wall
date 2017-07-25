@@ -2,7 +2,7 @@ module MovieParserTest exposing (..)
 
 import Test exposing (..)
 import Expect
-import MovieParser exposing (..)
+import Movie.Parser exposing (..)
 import Geometry exposing (..)
 import Movie exposing (..)
 

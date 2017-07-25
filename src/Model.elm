@@ -2,9 +2,10 @@ module Model exposing (..)
 
 import Dragging
 import Movie exposing (..)
-import MovieParser exposing (..)
+import Movie exposing (..)
 import Geometry exposing (..)
 import Mouse
+import Movie.Parser exposing (MovieDefinition)
 import Primitives exposing (resultToMaybe)
 
 
@@ -63,7 +64,7 @@ hydrate collection definition =
 
 gridMoviesFromUrlString : String -> String -> List GridMovie
 gridMoviesFromUrlString collectionName movieId =
-    movieId |> String.split "," |> List.filterMap (MovieParser.parseMovie >> resultToMaybe) |> List.map (hydrate collectionName)
+    movieId |> String.split "," |> List.filterMap (Movie.parseString >> resultToMaybe) |> List.map (hydrate collectionName)
 
 
 frameToString : GridMovie -> String

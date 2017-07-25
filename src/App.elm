@@ -16,13 +16,11 @@ import Geometry exposing (..)
 import Navigation exposing (..)
 import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
-import MovieParser exposing (..)
 import Json.Decode exposing (Decoder)
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie, remove)
 import Dragging exposing (..)
-import List.Extra
 
 
 -- TODO: something for saving curated collections/switching between collections, ala codepen
@@ -287,7 +285,6 @@ videoTagView model index movie =
 
 
 
--- draw relevant gridlines.
 -- when within 10 px of a gridline (left, vcenter, right, hcenter, top, bottom), show a
 --- dotted line indicating that they might want to snap to this
 -- or... snap to gridline on drop.

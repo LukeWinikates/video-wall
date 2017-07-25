@@ -1,7 +1,6 @@
-module MovieParser exposing (..)
+module Movie.Parser exposing (..)
 
 import Geometry exposing (..)
-import Movie exposing (..)
 import Combine exposing (..)
 import Combine.Num exposing (int)
 
