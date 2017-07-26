@@ -8,7 +8,8 @@ import Set
 
 
 -- TODO: only show the lines that are closest to the top, bottom, or center of the current thing
--- TODO: exclude the currently dragged thing?
+-- TODO: exclude the currently dragged thing? or maybe style it differently?
+-- TODO: make the snapping more elegantly done
 
 
 horizontalLineView : Int -> Html msg
@@ -39,12 +40,18 @@ verticalLineView x =
 
 topCenterBottom : GridMovie -> List Int
 topCenterBottom gridMovie =
-    [ gridMovie.top, gridMovie.top + (gridMovie.height // 2), gridMovie.top + gridMovie.height ]
+    [ gridMovie.top |> snap
+    , (gridMovie.top |> snap) + (gridMovie.height // 2)
+    , (gridMovie.top |> snap) + gridMovie.height
+    ]
 
 
 leftCenterRight : GridMovie -> List Int
 leftCenterRight gridMovie =
-    [ gridMovie.left, gridMovie.left + (gridMovie.width // 2), gridMovie.left + gridMovie.width ]
+    [ gridMovie.left |> snap
+    , (gridMovie.left |> snap) + (gridMovie.width // 2)
+    , (gridMovie.left |> snap) + gridMovie.width
+    ]
 
 
 getHorizontals : Model -> List Int
