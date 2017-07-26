@@ -21,6 +21,8 @@ import Primitives exposing (resultToMaybe)
 import Model exposing (GridMovie, Model, VideoMode(..), gridMoviesFromUrlString, toUrl)
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie, remove)
 import Dragging exposing (..)
+import Time exposing (Time)
+
 
 
 -- TODO: something for saving curated collections/switching between collections, ala codepen
@@ -35,6 +37,8 @@ import Dragging exposing (..)
 -- TODO: menu for switching between collections
 -- TODO: modal video adder? scroll into view?
 -- TODO: when should the snapping *actually* happen?
+-- TODO: store last interaction time when a mutation happens
+-- TODO: fix sizing of the small scale - it doesn't match the gridlines
 
 
 colors =
