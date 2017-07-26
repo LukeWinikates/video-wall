@@ -34,19 +34,19 @@ dimension : Scale -> Orientation -> Dimension
 dimension scale orientation =
     case ( scale, orientation ) of
         ( Small, Vertical ) ->
-            { height = 340, width = 190 }
+            { height = 340, width = 200 }
 
         ( Medium, Vertical ) ->
-            { height = 520, width = 290 }
+            { height = 500, width = 290 }
 
         ( Large, Vertical ) ->
             { height = 640, width = 370 }
 
         ( Small, Horizontal ) ->
-            { height = 190, width = 340 }
+            { height = 200, width = 340 }
 
         ( Medium, Horizontal ) ->
-            { height = 290, width = 520 }
+            { height = 290, width = 500 }
 
         ( Large, Horizontal ) ->
             { height = 370, width = 640 }

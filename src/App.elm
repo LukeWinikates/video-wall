@@ -24,7 +24,6 @@ import Dragging exposing (..)
 import Time exposing (Time)
 
 
-
 -- TODO: something for saving curated collections/switching between collections, ala codepen
 -- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
@@ -38,7 +37,6 @@ import Time exposing (Time)
 -- TODO: modal video adder? scroll into view?
 -- TODO: when should the snapping *actually* happen?
 -- TODO: store last interaction time when a mutation happens
--- TODO: fix sizing of the small scale - it doesn't match the gridlines
 
 
 colors =
