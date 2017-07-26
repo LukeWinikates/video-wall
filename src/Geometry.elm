@@ -30,23 +30,35 @@ flipOrientation orientation =
         Horizontal
 
 
+type alias AbstractDimension =
+    { longSide : Int
+    , shortSide : Int
+    }
+
+
+orientedDimension : Orientation -> AbstractDimension -> Dimension
+orientedDimension orientation dim =
+    case orientation of
+        Horizontal ->
+            { height = dim.shortSide, width = dim.longSide }
+
+        Vertical ->
+            { height = dim.longSide, width = dim.shortSide }
+
+
+abstractDimension : Scale -> AbstractDimension
+abstractDimension scale =
+    case scale of
+        Small ->
+            { longSide = 340, shortSide = 200 }
+
+        Medium ->
+            { longSide = 500, shortSide = 290 }
+
+        Large ->
+            { longSide = 640, shortSide = 370 }
+
+
 dimension : Scale -> Orientation -> Dimension
 dimension scale orientation =
-    case ( scale, orientation ) of
-        ( Small, Vertical ) ->
-            { height = 340, width = 200 }
-
-        ( Medium, Vertical ) ->
-            { height = 500, width = 290 }
-
-        ( Large, Vertical ) ->
-            { height = 640, width = 370 }
-
-        ( Small, Horizontal ) ->
-            { height = 200, width = 340 }
-
-        ( Medium, Horizontal ) ->
-            { height = 290, width = 500 }
-
-        ( Large, Horizontal ) ->
-            { height = 370, width = 640 }
+    abstractDimension scale |> orientedDimension orientation
