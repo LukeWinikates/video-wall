@@ -1,6 +1,7 @@
 module GuideLines exposing (guideLines)
 
 import DomHelpers exposing (px, snap)
+import Geometry exposing (dimension)
 import Model exposing (Model, GridMovie)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
@@ -40,18 +41,26 @@ verticalLineView x =
 
 topCenterBottom : GridMovie -> List Int
 topCenterBottom gridMovie =
-    [ gridMovie.top |> snap
-    , (gridMovie.top |> snap) + (gridMovie.height // 2)
-    , (gridMovie.top |> snap) + gridMovie.height
-    ]
+    let
+        top =
+            snap <| gridMovie.top
+
+        height =
+            snap <| .height <| dimension gridMovie.scale gridMovie.orientation
+    in
+        [ top, top + (height // 2), top + height ]
 
 
 leftCenterRight : GridMovie -> List Int
 leftCenterRight gridMovie =
-    [ gridMovie.left |> snap
-    , (gridMovie.left |> snap) + (gridMovie.width // 2)
-    , (gridMovie.left |> snap) + gridMovie.width
-    ]
+    let
+        left =
+            snap <| gridMovie.left
+
+        width =
+            snap <| .width <| dimension gridMovie.scale gridMovie.orientation
+    in
+        [ left, left + (width // 2), left + width ]
 
 
 getHorizontals : Model -> List Int

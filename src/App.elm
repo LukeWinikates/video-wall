@@ -18,7 +18,7 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
 import Json.Decode exposing (Decoder)
 import Primitives exposing (resultToMaybe)
-import Model exposing (GridMovie, Model, Scale(..), VideoMode(..), gridMoviesFromUrlString, toUrl)
+import Model exposing (GridMovie, Model, VideoMode(..), gridMoviesFromUrlString, toUrl)
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie, remove)
 import Dragging exposing (..)
 
@@ -28,7 +28,6 @@ import Dragging exposing (..)
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
 -- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
 -- TODO: maybe make final position snap to grid when dragging / updating url
--- TODO: because the scale is not captured directly, and is instead encoded as the height/width measure, when the movie gets rotated it's not easy to go from height/width back to scale, and preserving scale is more annoying than it should be. Save the scale instead of the height/width.
 -- TODO: when being dragged, the dragged item should have the highest z-index.
 -- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
 -- TODO: when creating a new video, first show size and orientation picker, then show video picker
@@ -286,29 +285,33 @@ videoTagView model index movie =
 
 gridMovieView : Model -> Int -> GridMovie -> Html Msg
 gridMovieView model index gridMovie =
-    div
-        [ (style
-            [ ( "position", "absolute" )
-            , ( "left", gridMovie.left |> snap |> px )
-            , ( "width", gridMovie.width |> snap |> px )
-            , ( "top", gridMovie.top |> snap |> px )
-            , ( "height", gridMovie.height |> snap |> px )
-            , ( "box-sizing", "border-box" )
-            , ( "text-align", "center" )
-            , ( "z-index"
-              , if gridMovie.menu then
-                    "20"
-                else
-                    "0"
+    let
+        { height, width } =
+            dimension gridMovie.scale gridMovie.orientation
+    in
+        div
+            [ (style
+                [ ( "position", "absolute" )
+                , ( "left", gridMovie.left |> snap |> px )
+                , ( "width", width |> snap |> px )
+                , ( "top", gridMovie.top |> snap |> px )
+                , ( "height", height |> snap |> px )
+                , ( "box-sizing", "border-box" )
+                , ( "text-align", "center" )
+                , ( "z-index"
+                  , if gridMovie.menu then
+                        "20"
+                    else
+                        "0"
+                  )
+                ]
               )
+            , (onMouseEnter (ChangeMovie (ToggleMenu True) index))
+            , (onMouseLeave (ChangeMovie (ChangeMode Showing) index))
             ]
-          )
-        , (onMouseEnter (ChangeMovie (ToggleMenu True) index))
-        , (onMouseLeave (ChangeMovie (ChangeMode Showing) index))
-        ]
-        ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
-            ++ (helperViews model.collectionMovies gridMovie index)
-        )
+            ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
+                ++ (helperViews model.collectionMovies gridMovie index)
+            )
 
 
 view : Model -> Html Msg

@@ -1,7 +1,7 @@
 module Model.Mutate exposing (..)
 
 import Dragging exposing (Drag)
-import Geometry exposing (Orientation(Horizontal, Vertical))
+import Geometry exposing (Orientation(Horizontal, Vertical), Scale(Large, Medium, Small))
 import Model exposing (..)
 import List.Extra
 import Movie exposing (Movie)
@@ -15,12 +15,6 @@ type Mutation
     | ChangeMode VideoMode
     | Rotate Orientation
     | ToggleMenu Bool
-
-
-type alias Dimension =
-    { width : Int
-    , height : Int
-    }
 
 
 changeMode : VideoMode -> GridMovie -> GridMovie
@@ -40,7 +34,6 @@ rotate oldOrientation gridMovie =
         , mode = Menu
         , movie = Nothing
     }
-        |> resizeMovie Large
 
 
 applyAll : (GridMovie -> GridMovie) -> Model -> Model
@@ -91,35 +84,9 @@ setMovie newMovie gridMovie =
     { gridMovie | movie = Just newMovie }
 
 
-dimension : Scale -> Orientation -> Dimension
-dimension scale orientation =
-    case ( scale, orientation ) of
-        ( Small, Vertical ) ->
-            { height = 340, width = 190 }
-
-        ( Medium, Vertical ) ->
-            { height = 520, width = 290 }
-
-        ( Large, Vertical ) ->
-            { height = 640, width = 370 }
-
-        ( Small, Horizontal ) ->
-            { height = 190, width = 340 }
-
-        ( Medium, Horizontal ) ->
-            { height = 290, width = 520 }
-
-        ( Large, Horizontal ) ->
-            { height = 370, width = 640 }
-
-
 resizeMovie : Scale -> GridMovie -> GridMovie
 resizeMovie scale gridMovie =
-    let
-        newScale =
-            dimension scale gridMovie.orientation
-    in
-        { gridMovie | width = newScale.width, height = newScale.height }
+    { gridMovie | scale = scale }
 
 
 resize : Scale -> Int -> Model -> Model
@@ -148,8 +115,7 @@ newMovie orientation scale position model =
                 ++ [ { orientation = orientation
                      , top = position.y
                      , left = position.x
-                     , height = (dimension scale orientation).height
-                     , width = (dimension scale orientation).width
+                     , scale = scale
                      , movie = Nothing
                      , mode = Menu
                      , menu = False

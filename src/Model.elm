@@ -12,9 +12,8 @@ import Primitives exposing (resultToMaybe)
 type alias GridMovie =
     { orientation : Orientation
     , top : Int
-    , height : Int
     , left : Int
-    , width : Int
+    , scale : Scale
     , mode : VideoMode
     , movie : Maybe Movie
     , menu : Bool
@@ -27,12 +26,6 @@ type alias Model =
     , collectionMovies : List Movie
     , dragging : Maybe (Dragging.Drag Int)
     }
-
-
-type Scale
-    = Small
-    | Medium
-    | Large
 
 
 type VideoMode
@@ -53,9 +46,8 @@ hydrate : String -> MovieDefinition -> GridMovie
 hydrate collection definition =
     { orientation = definition.orientation
     , top = definition.top
-    , height = definition.height
     , left = definition.left
-    , width = definition.width
+    , scale = definition.scale
     , movie = Movie.findById (Movie.fromCollection collection) definition.movieId
     , mode = Showing
     , menu = False
@@ -68,7 +60,7 @@ gridMoviesFromUrlString collectionName movieId =
 
 
 frameToString : GridMovie -> String
-frameToString { orientation, top, left, height, width, movie } =
+frameToString { orientation, scale, top, left, movie } =
     [ (case orientation of
         Horizontal ->
             "H"
@@ -76,10 +68,18 @@ frameToString { orientation, top, left, height, width, movie } =
         Vertical ->
             "V"
       )
+    , (case scale of
+        Small ->
+            "S"
+
+        Medium ->
+            "M"
+
+        Large ->
+            "L"
+      )
     , toString top
     , toString left
-    , toString height
-    , toString width
     , Maybe.map .id movie |> Maybe.withDefault "N"
     ]
         |> String.join "-"

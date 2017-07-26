@@ -8,9 +8,8 @@ import Combine.Num exposing (int)
 type alias MovieDefinition =
     { orientation : Orientation
     , top : Int
-    , height : Int
     , left : Int
-    , width : Int
+    , scale : Scale
     , movieId : String
     }
 
@@ -21,24 +20,31 @@ orientation =
         (string "H" $> Horizontal)
 
 
+scale : Parser s Scale
+scale =
+    choice
+        [ (string "S" $> Small)
+        , (string "M" $> Medium)
+        , (string "L" $> Large)
+        ]
+
+
 dash =
     string "-"
 
 
 movie : Parser s MovieDefinition
 movie =
-    (\orientation top left height width movieId ->
+    (\orientation scale top left movieId ->
         { orientation = orientation
+        , scale = scale
         , top = top
         , left = left
-        , height = height
-        , width = width
         , movieId = movieId
         }
     )
         <$> orientation
-        <*> (dash *> int)
-        <*> (dash *> int)
+        <*> (dash *> scale)
         <*> (dash *> int)
         <*> (dash *> int)
         <*> (dash *> (toString <$> int) <* end)
