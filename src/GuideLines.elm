@@ -59,7 +59,6 @@ getVerticals : Model -> List Int
 getVerticals model =
     List.map leftCenterRight model.movies
         |> List.concat
-        |> List.map snap
         |> Set.fromList
         |> Set.toList
 
