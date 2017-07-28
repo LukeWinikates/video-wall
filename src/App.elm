@@ -18,8 +18,8 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 import Movie exposing (..)
 import Json.Decode exposing (Decoder)
 import Primitives exposing (resultToMaybe)
-import Model exposing (GridMovie, Model, VideoMode(..), gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changeMode, changePosition, drag, newMovie, resize, setMovie, remove)
+import Model exposing (GridItem, GridContent(..), Model, gridMoviesFromUrlString, toUrl)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, toggleVideoPicker, changePosition, drag, newItem, resize, setMovie, remove)
 import Dragging exposing (..)
 import Time exposing (Time)
 
@@ -97,7 +97,7 @@ modelFrom (AppRoute maybeCollection maybeMovies) =
 type Msg
     = ChangeMovie Mutation Int
     | UrlChange Navigation.Location
-    | NewMovie Orientation Scale Position
+    | NewMovie Position
     | DragMovie Int DragEvent
     | Remove Int
 
@@ -140,8 +140,8 @@ update action model =
                     )
                     |> wrapDrag typ
 
-            NewMovie orientation size position ->
-                wrap (newMovie orientation size position model)
+            NewMovie position ->
+                wrap (newItem position model)
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -216,43 +216,69 @@ consIf condition item items =
         items
 
 
-helperViews : List Movie -> GridMovie -> Int -> List (Html Msg)
-helperViews collectionMovies gridMovie index =
-    []
-        |> consIf gridMovie.menu
-            (div
-                [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
-                [ div []
-                    [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows colors.color.thunder 12)
-                    , changeButton (ChangeMovie (Rotate gridMovie.orientation) index) (FontAwesome.undo colors.color.thunder 12)
-                    , changeButton (Remove index) (FontAwesome.close colors.color.thunder 12)
-                    ]
-                , div []
-                    [ changeButton (ChangeMovie (Resize Small) index) (text "S")
-                    , changeButton (ChangeMovie (Resize Medium) index) (text "M")
-                    , changeButton (ChangeMovie (Resize Large) index) (text "L")
-                    ]
-                ]
+hoverMenu : Int -> Orientation -> Html Msg
+hoverMenu index orientation =
+    (div
+        [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
+        [ div []
+            [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows colors.color.thunder 12)
+            , changeButton (ChangeMovie (Rotate orientation) index) (FontAwesome.undo colors.color.thunder 12)
+            , changeButton (Remove index) (FontAwesome.close colors.color.thunder 12)
+            ]
+        , div []
+            [ changeButton (ChangeMovie (Resize Small) index) (text "S")
+            , changeButton (ChangeMovie (Resize Medium) index) (text "M")
+            , changeButton (ChangeMovie (Resize Large) index) (text "L")
+            ]
+        ]
+    )
+
+
+videoPicker : Int -> List Movie -> Orientation -> Html Msg
+videoPicker index collectionMovies orientation =
+    (ul
+        [ (style
+            [ ( "background-color", colors.hex.platinum )
+            , ( "width", "100%" )
+            , ( "height", "100%" )
+            , ( "padding", "10px" )
+            , ( "border", "10px solid " ++ colors.hex.thunder )
+            , ( "border-radius", "2px" )
+            , ( "list-style", "none" )
+            , ( "margin", "auto" )
+            , ( "position", "absolute" )
+            , ( "top", "0" )
+            , ( "left", "0" )
+            ]
+          )
+        ]
+        (List.map (movieItem index) (byOrientation collectionMovies orientation))
+    )
+
+
+helperViews : List Movie -> GridContent -> Int -> List (Html Msg)
+helperViews collectionMovies content index =
+    case content of
+        Content orientation scale movie menus ->
+            ([]
+                |> consIf menus.hoverMenu
+                    (hoverMenu
+                        index
+                        orientation
+                    )
+                |> consIf menus.videoPicker
+                    (videoPicker
+                        index
+                        collectionMovies
+                        orientation
+                    )
             )
-        |> consIf (gridMovie.mode == Menu)
-            (ul
-                [ (style
-                    [ ( "background-color", colors.hex.platinum )
-                    , ( "width", "100%" )
-                    , ( "height", "100%" )
-                    , ( "padding", "10px" )
-                    , ( "border", "10px solid " ++ colors.hex.thunder )
-                    , ( "border-radius", "2px" )
-                    , ( "list-style", "none" )
-                    , ( "margin", "auto" )
-                    , ( "position", "absolute" )
-                    , ( "top", "0" )
-                    , ( "left", "0" )
-                    ]
-                  )
-                ]
-                (List.map (movieItem index) (byOrientation collectionMovies gridMovie.orientation))
-            )
+
+        Picking orientation scale ->
+            [ videoPicker index collectionMovies orientation ]
+
+        _ ->
+            []
 
 
 videoTagView : Model -> Int -> Movie -> Html Msg
@@ -263,7 +289,7 @@ videoTagView model index movie =
     in
         video
             [ (loop True)
-            , (onClick (ChangeMovie (ChangeMode Menu) index))
+            , (onClick (ChangeMovie (ChangeMode True) index))
             , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
             , (volume 0.005)
             , (style
@@ -285,35 +311,40 @@ videoTagView model index movie =
             []
 
 
-gridMovieView : Model -> Int -> GridMovie -> Html Msg
-gridMovieView model index gridMovie =
-    let
-        { height, width } =
-            dimension gridMovie.scale gridMovie.orientation
-    in
-        div
-            [ (style
-                [ ( "position", "absolute" )
-                , ( "left", gridMovie.left |> snap |> px )
-                , ( "width", width |> snap |> px )
-                , ( "top", gridMovie.top |> snap |> px )
-                , ( "height", height |> snap |> px )
-                , ( "box-sizing", "border-box" )
-                , ( "text-align", "center" )
-                , ( "z-index"
-                  , if gridMovie.menu then
-                        "20"
-                    else
-                        "0"
-                  )
-                ]
-              )
-            , (onMouseEnter (ChangeMovie (ToggleMenu True) index))
-            , (onMouseLeave (ChangeMovie (ChangeMode Showing) index))
-            ]
-            ((List.filterMap identity [ (Maybe.map (videoTagView model index) gridMovie.movie) ])
-                ++ (helperViews model.collectionMovies gridMovie index)
-            )
+gridMovieView : Model -> Int -> GridItem -> Html Msg
+gridMovieView model index gridItem =
+    case gridItem.content of
+        Content orientation scale movie menus ->
+            let
+                { height, width } =
+                    dimension scale orientation
+            in
+                div
+                    [ (style
+                        [ ( "position", "absolute" )
+                        , ( "left", gridItem.left |> snap |> px )
+                        , ( "width", width |> snap |> px )
+                        , ( "top", gridItem.top |> snap |> px )
+                        , ( "height", height |> snap |> px )
+                        , ( "box-sizing", "border-box" )
+                        , ( "text-align", "center" )
+                        , ( "z-index"
+                          , if menus.hoverMenu then
+                                "20"
+                            else
+                                "0"
+                          )
+                        ]
+                      )
+                    , (onMouseEnter (ChangeMovie (ToggleMenu True) index))
+                    , (onMouseLeave (ChangeMovie (ChangeMode False) index))
+                    ]
+                    ((List.filterMap identity [ (Maybe.map (videoTagView model index) movie) ])
+                        ++ (helperViews model.collectionMovies gridItem.content index)
+                    )
+
+        _ ->
+            Html.text ""
 
 
 view : Model -> Html Msg
@@ -322,7 +353,7 @@ view model =
         []
         [ div
             [ Html.Attributes.id "background"
-            , (onClickElementWithId "background" decodePosition (NewMovie Vertical Large))
+            , (onClickElementWithId "background" decodePosition NewMovie)
             , (style
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )

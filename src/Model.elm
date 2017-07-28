@@ -5,32 +5,35 @@ import Movie exposing (..)
 import Movie exposing (..)
 import Geometry exposing (..)
 import Mouse
-import Movie.Parser exposing (MovieDefinition)
+import Model.Parser exposing (ItemDescription)
 import Primitives exposing (resultToMaybe)
 
 
-type alias GridMovie =
-    { orientation : Orientation
-    , top : Int
+type alias GridItem =
+    { top : Int
     , left : Int
-    , scale : Scale
-    , mode : VideoMode
-    , movie : Maybe Movie
-    , menu : Bool
+    , content : GridContent
     }
 
 
+type alias MenuState =
+    { videoPicker : Bool
+    , hoverMenu : Bool
+    }
+
+
+type GridContent
+    = Initial
+    | Picking Orientation Scale
+    | Content Orientation Scale (Maybe Movie) MenuState
+
+
 type alias Model =
-    { movies : List GridMovie
+    { movies : List GridItem
     , collection : String
     , collectionMovies : List Movie
     , dragging : Maybe (Dragging.Drag Int)
     }
-
-
-type VideoMode
-    = Menu
-    | Showing
 
 
 empty : Model
@@ -42,50 +45,91 @@ empty =
     }
 
 
-hydrate : String -> MovieDefinition -> GridMovie
+hydrate : String -> ItemDescription -> GridItem
 hydrate collection definition =
-    { orientation = definition.orientation
-    , top = definition.top
+    { top = definition.top
     , left = definition.left
-    , scale = definition.scale
-    , movie = Movie.findById (Movie.fromCollection collection) definition.movieId
-    , mode = Showing
-    , menu = False
+    , content =
+        Content
+            definition.orientation
+            definition.scale
+            (Movie.findById
+                (Movie.fromCollection collection)
+                definition.movieId
+            )
+            defaultMenuState
     }
 
 
-gridMoviesFromUrlString : String -> String -> List GridMovie
+defaultMenuState : MenuState
+defaultMenuState =
+    { videoPicker = False
+    , hoverMenu = False
+    }
+
+
+gridMoviesFromUrlString : String -> String -> List GridItem
 gridMoviesFromUrlString collectionName movieId =
-    movieId |> String.split "," |> List.filterMap (Movie.parseString >> resultToMaybe) |> List.map (hydrate collectionName)
+    movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.map (hydrate collectionName)
 
 
-frameToString : GridMovie -> String
-frameToString { orientation, scale, top, left, movie } =
-    [ (case orientation of
-        Horizontal ->
-            "H"
+frameToString : GridItem -> String
+frameToString { content, top, left } =
+    ([ toString top
+     , toString left
+     ]
+        ++ case content of
+            Initial ->
+                [ "N" ]
 
-        Vertical ->
-            "V"
-      )
-    , (case scale of
-        Small ->
-            "S"
+            Picking orientation scale ->
+                [ (case orientation of
+                    Horizontal ->
+                        "H"
 
-        Medium ->
-            "M"
+                    Vertical ->
+                        "V"
+                  )
+                , (case scale of
+                    Small ->
+                        "S"
 
-        Large ->
-            "L"
-      )
-    , toString top
-    , toString left
-    , Maybe.map .id movie |> Maybe.withDefault "N"
-    ]
+                    Medium ->
+                        "M"
+
+                    Large ->
+                        "L"
+                  )
+                ]
+
+            Content orientation scale (Just movie) menu ->
+                [ (case orientation of
+                    Horizontal ->
+                        "H"
+
+                    Vertical ->
+                        "V"
+                  )
+                , (case scale of
+                    Small ->
+                        "S"
+
+                    Medium ->
+                        "M"
+
+                    Large ->
+                        "L"
+                  )
+                , movie.id
+                ]
+
+            _ ->
+                []
+    )
         |> String.join "-"
 
 
-framesUrlString : List GridMovie -> String
+framesUrlString : List GridItem -> String
 framesUrlString frames =
     frames |> List.map frameToString |> String.join ","
 

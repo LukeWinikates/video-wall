@@ -12,31 +12,49 @@ import Mouse exposing (Position)
 type Mutation
     = Swap Movie
     | Resize Scale
-    | ChangeMode VideoMode
+    | ChangeMode Bool
     | Rotate Orientation
     | ToggleMenu Bool
 
 
-changeMode : VideoMode -> GridMovie -> GridMovie
-changeMode mode gridMovie =
-    { gridMovie | mode = mode }
+toggleVideoPicker : Bool -> GridItem -> GridItem
+toggleVideoPicker bool gridItem =
+    case gridItem.content of
+        Content o s m ms ->
+            { gridItem | content = Content o s m { ms | videoPicker = bool } }
+
+        _ ->
+            gridItem
 
 
-toggleMenu : Bool -> GridMovie -> GridMovie
-toggleMenu bool gridMovie =
-    { gridMovie | menu = bool }
+toggleMenu : Bool -> GridItem -> GridItem
+toggleMenu bool gridItem =
+    case gridItem.content of
+        Content o s m ms ->
+            { gridItem | content = Content o s m { ms | hoverMenu = bool } }
+
+        _ ->
+            gridItem
 
 
-rotate : Orientation -> GridMovie -> GridMovie
-rotate oldOrientation gridMovie =
-    { gridMovie
-        | orientation = Geometry.flipOrientation oldOrientation
-        , mode = Menu
-        , movie = Nothing
-    }
+rotate : Orientation -> GridItem -> GridItem
+rotate oldOrientation gridItem =
+    case gridItem.content of
+        Content o s m ms ->
+            { gridItem
+                | content =
+                    Content
+                        (Geometry.flipOrientation oldOrientation)
+                        s
+                        Nothing
+                        defaultMenuState
+            }
+
+        _ ->
+            gridItem
 
 
-applyAll : (GridMovie -> GridMovie) -> Model -> Model
+applyAll : (GridItem -> GridItem) -> Model -> Model
 applyAll f m =
     { m | movies = List.map f m.movies }
 
@@ -46,7 +64,7 @@ remove index model =
     { model | movies = List.Extra.removeAt index model.movies }
 
 
-applyAtIndex : (GridMovie -> GridMovie) -> Int -> Model -> Model
+applyAtIndex : (GridItem -> GridItem) -> Int -> Model -> Model
 applyAtIndex f index model =
     { model
         | movies =
@@ -61,13 +79,13 @@ applyMutationAtIndex mutation index model =
     applyAtIndex
         (case mutation of
             Swap movie ->
-                setMovie movie >> (toggleMenu False) >> (changeMode Showing)
+                setMovie movie >> (toggleMenu False) >> (toggleVideoPicker False)
 
             Resize scale ->
-                resizeMovie scale >> (toggleMenu False)
+                resizeItem scale >> (toggleMenu False)
 
             ChangeMode mode ->
-                changeMode mode >> (toggleMenu (mode /= Showing))
+                toggleVideoPicker mode >> (toggleMenu (mode /= True))
 
             Rotate currentOrientation ->
                 rotate currentOrientation
@@ -79,22 +97,32 @@ applyMutationAtIndex mutation index model =
         model
 
 
-setMovie : Movie -> GridMovie -> GridMovie
-setMovie newMovie gridMovie =
-    { gridMovie | movie = Just newMovie }
+setMovie : Movie -> GridItem -> GridItem
+setMovie newMovie gridItem =
+    case gridItem.content of
+        Content o s m ms ->
+            { gridItem | content = Content o s (Just newMovie) ms }
+
+        _ ->
+            gridItem
 
 
-resizeMovie : Scale -> GridMovie -> GridMovie
-resizeMovie scale gridMovie =
-    { gridMovie | scale = scale }
+resizeItem : Scale -> GridItem -> GridItem
+resizeItem scale gridItem =
+    case gridItem.content of
+        Content o s m ms ->
+            { gridItem | content = Content o scale m ms }
+
+        _ ->
+            gridItem
 
 
 resize : Scale -> Int -> Model -> Model
 resize scale index =
-    applyAtIndex (resizeMovie scale) index
+    applyAtIndex (resizeItem scale) index
 
 
-changePosition : Position -> GridMovie -> GridMovie
+changePosition : Position -> GridItem -> GridItem
 changePosition offset gridMovie =
     { gridMovie
         | top = gridMovie.top + offset.y
@@ -107,18 +135,14 @@ drag maybeDrag model =
     { model | dragging = maybeDrag }
 
 
-newMovie : Orientation -> Scale -> Position -> Model -> Model
-newMovie orientation scale position model =
+newItem : Position -> Model -> Model
+newItem position model =
     { model
         | movies =
             model.movies
-                ++ [ { orientation = orientation
-                     , top = position.y
+                ++ [ { top = position.y
                      , left = position.x
-                     , scale = scale
-                     , movie = Nothing
-                     , mode = Menu
-                     , menu = False
+                     , content = Initial
                      }
                    ]
     }

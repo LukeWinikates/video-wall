@@ -1,11 +1,11 @@
-module Movie.Parser exposing (..)
+module Model.Parser exposing (..)
 
 import Geometry exposing (..)
 import Combine exposing (..)
 import Combine.Num exposing (int)
 
 
-type alias MovieDefinition =
+type alias ItemDescription =
     { orientation : Orientation
     , top : Int
     , left : Int
@@ -33,7 +33,7 @@ dash =
     string "-"
 
 
-movie : Parser s MovieDefinition
+movie : Parser s ItemDescription
 movie =
     (\orientation scale top left movieId ->
         { orientation = orientation
@@ -50,8 +50,8 @@ movie =
         <*> (dash *> (toString <$> int) <* end)
 
 
-parseMovie : String -> Result String MovieDefinition
-parseMovie input =
+parseItem : String -> Result String ItemDescription
+parseItem input =
     case parse movie input of
         Ok ( _, stream, result ) ->
             Ok result

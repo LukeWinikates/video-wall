@@ -1,8 +1,8 @@
 module GuideLines exposing (guideLines)
 
 import DomHelpers exposing (px, snap)
-import Geometry exposing (dimension)
-import Model exposing (Model, GridMovie)
+import Geometry exposing (Orientation, Scale, dimension)
+import Model exposing (GridContent(Content), GridItem, Model)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Set
@@ -11,6 +11,10 @@ import Set
 -- TODO: only show the lines that are closest to the top, bottom, or center of the current thing
 -- TODO: exclude the currently dragged thing? or maybe style it differently?
 -- TODO: make the snapping more elegantly done
+
+
+type alias Dimensionable =
+    { left : Int, top : Int, scale : Scale, orientation : Orientation }
 
 
 horizontalLineView : Int -> Html msg
@@ -39,33 +43,45 @@ verticalLineView x =
         []
 
 
-topCenterBottom : GridMovie -> List Int
-topCenterBottom gridMovie =
+topCenterBottom : Dimensionable -> List Int
+topCenterBottom item =
     let
         top =
-            snap <| gridMovie.top
+            snap <| item.top
 
         height =
-            snap <| .height <| dimension gridMovie.scale gridMovie.orientation
+            snap <| .height <| dimension item.scale item.orientation
     in
         [ top, top + (height // 2), top + height ]
 
 
-leftCenterRight : GridMovie -> List Int
-leftCenterRight gridMovie =
+leftCenterRight : Dimensionable -> List Int
+leftCenterRight item =
     let
         left =
-            snap <| gridMovie.left
+            snap <| item.left
 
         width =
-            snap <| .width <| dimension gridMovie.scale gridMovie.orientation
+            snap <| .width <| dimension item.scale item.orientation
     in
         [ left, left + (width // 2), left + width ]
 
 
+dimensionable : GridItem -> Maybe Dimensionable
+dimensionable item =
+    case item.content of
+        Content orientation scale _ _ ->
+            Just { left = item.left, top = item.top, scale = scale, orientation = orientation }
+
+        _ ->
+            Nothing
+
+
 getHorizontals : Model -> List Int
 getHorizontals model =
-    List.map topCenterBottom model.movies
+    model.movies
+        |> List.filterMap dimensionable
+        |> List.map topCenterBottom
         |> List.concat
         |> Set.fromList
         |> Set.toList
@@ -73,7 +89,9 @@ getHorizontals model =
 
 getVerticals : Model -> List Int
 getVerticals model =
-    List.map leftCenterRight model.movies
+    model.movies
+        |> List.filterMap dimensionable
+        |> List.map leftCenterRight
         |> List.concat
         |> Set.fromList
         |> Set.toList

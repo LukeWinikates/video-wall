@@ -1,10 +1,9 @@
-module Movie exposing (Movie, byOrientation, findById, fileName, fromCollection, parseString)
+module Movie exposing (Movie, byOrientation, findById, fileName, fromCollection)
 
 import Dict exposing (Dict)
 import Geometry exposing (..)
 import List
 import Maybe exposing (withDefault)
-import Movie.Parser
 
 
 type alias Movie =
@@ -12,10 +11,6 @@ type alias Movie =
     , orientation : Orientation
     , description : String
     }
-
-
-parseString =
-    Movie.Parser.parseMovie
 
 
 byOrientation : List Movie -> Orientation -> List Movie
