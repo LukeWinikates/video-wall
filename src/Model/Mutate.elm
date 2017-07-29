@@ -12,9 +12,10 @@ import Mouse exposing (Position)
 type Mutation
     = Swap Movie
     | Resize Scale
-    | ChangeMode Bool
+    | ShowPicker Bool
+    | ShowHoverMenu Bool
     | Rotate Orientation
-    | ToggleMenu Bool
+    | ContentChange GridContent
 
 
 toggleVideoPicker : Bool -> GridItem -> GridItem
@@ -27,8 +28,8 @@ toggleVideoPicker bool gridItem =
             gridItem
 
 
-toggleMenu : Bool -> GridItem -> GridItem
-toggleMenu bool gridItem =
+toggleHoverMenu : Bool -> GridItem -> GridItem
+toggleHoverMenu bool gridItem =
     case gridItem.content of
         Content o s m ms ->
             { gridItem | content = Content o s m { ms | hoverMenu = bool } }
@@ -43,11 +44,9 @@ rotate oldOrientation gridItem =
         Content o s m ms ->
             { gridItem
                 | content =
-                    Content
+                    Picking
                         (Geometry.flipOrientation oldOrientation)
                         s
-                        Nothing
-                        defaultMenuState
             }
 
         _ ->
@@ -79,22 +78,30 @@ applyMutationAtIndex mutation index model =
     applyAtIndex
         (case mutation of
             Swap movie ->
-                setMovie movie >> (toggleMenu False) >> (toggleVideoPicker False)
+                setMovie movie >> (toggleHoverMenu True) >> (toggleVideoPicker False)
 
             Resize scale ->
-                resizeItem scale >> (toggleMenu False)
+                resizeItem scale >> (toggleHoverMenu False)
 
-            ChangeMode mode ->
-                toggleVideoPicker mode >> (toggleMenu (mode /= True))
+            ShowPicker mode ->
+                toggleVideoPicker mode >> (toggleHoverMenu (not mode))
 
             Rotate currentOrientation ->
                 rotate currentOrientation
 
-            ToggleMenu bool ->
-                toggleMenu bool
+            ShowHoverMenu bool ->
+                toggleHoverMenu bool
+
+            ContentChange newContent ->
+                content newContent
         )
         index
         model
+
+
+content : GridContent -> GridItem -> GridItem
+content gridContent item =
+    { item | content = gridContent }
 
 
 setMovie : Movie -> GridItem -> GridItem
@@ -102,6 +109,9 @@ setMovie newMovie gridItem =
     case gridItem.content of
         Content o s m ms ->
             { gridItem | content = Content o s (Just newMovie) ms }
+
+        Picking o s ->
+            { gridItem | content = Content o s (Just newMovie) defaultMenuState }
 
         _ ->
             gridItem

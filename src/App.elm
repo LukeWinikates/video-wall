@@ -19,7 +19,7 @@ import Movie exposing (..)
 import Json.Decode exposing (Decoder)
 import Primitives exposing (resultToMaybe)
 import Model exposing (GridItem, GridContent(..), Model, gridMoviesFromUrlString, toUrl)
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, toggleVideoPicker, changePosition, drag, newItem, resize, setMovie, remove)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Dragging exposing (..)
 import Time exposing (Time)
 
@@ -31,12 +31,15 @@ import Time exposing (Time)
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
 -- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
--- TODO: when creating a new video, first show size and orientation picker, then show video picker
--- TODO: when creating a new video, the object is not a video yet - it's a pre-video
 -- TODO: menu for switching between collections
--- TODO: modal video adder? scroll into view?
 -- TODO: when should the snapping *actually* happen?
 -- TODO: store last interaction time when a mutation happens
+-- TODO: some kind of affordance indicating that clicking on the grid lets you add a movie
+-- TODO: allow for closing of the "Initial" view
+-- TODO: picker looks better for the Picking view
+-- TODO: consolidate the size-setting code in gridItemView
+-- TODO: make "maybe" state for videos turn into Picking mode
+-- TODO: fix url parsing / url generation
 
 
 colors =
@@ -281,6 +284,56 @@ helperViews collectionMovies content index =
             []
 
 
+dimensionsForContent : GridContent -> Dimension
+dimensionsForContent content =
+    let
+        ( orientation, scale ) =
+            case content of
+                Picking orientation scale ->
+                    ( orientation, scale )
+
+                Content orientation scale _ _ ->
+                    ( orientation, scale )
+
+                _ ->
+                    ( Vertical, Medium )
+    in
+        dimension scale orientation
+
+
+zIndexForContent : GridContent -> String
+zIndexForContent content =
+    toString <|
+        case content of
+            Content _ _ _ menus ->
+                if menus.hoverMenu then
+                    20
+                else
+                    0
+
+            _ ->
+                0
+
+
+gridItemStyling : GridItem -> Attribute Msg
+gridItemStyling item =
+    let
+        { height, width } =
+            dimensionsForContent item.content
+    in
+        (style
+            [ ( "position", "absolute" )
+            , ( "left", item.left |> snap |> px )
+            , ( "width", width |> snap |> px )
+            , ( "top", item.top |> snap |> px )
+            , ( "height", height |> snap |> px )
+            , ( "box-sizing", "border-box" )
+            , ( "text-align", "center" )
+            , ( "z-index", zIndexForContent item.content )
+            ]
+        )
+
+
 videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     let
@@ -289,7 +342,7 @@ videoTagView model index movie =
     in
         video
             [ (loop True)
-            , (onClick (ChangeMovie (ChangeMode True) index))
+            , (onClick (ChangeMovie (ShowPicker True) index))
             , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
             , (volume 0.005)
             , (style
@@ -313,38 +366,48 @@ videoTagView model index movie =
 
 gridMovieView : Model -> Int -> GridItem -> Html Msg
 gridMovieView model index gridItem =
-    case gridItem.content of
-        Content orientation scale movie menus ->
-            let
-                { height, width } =
-                    dimension scale orientation
-            in
-                div
-                    [ (style
-                        [ ( "position", "absolute" )
-                        , ( "left", gridItem.left |> snap |> px )
-                        , ( "width", width |> snap |> px )
-                        , ( "top", gridItem.top |> snap |> px )
-                        , ( "height", height |> snap |> px )
-                        , ( "box-sizing", "border-box" )
-                        , ( "text-align", "center" )
-                        , ( "z-index"
-                          , if menus.hoverMenu then
-                                "20"
-                            else
-                                "0"
-                          )
+    let
+        styles =
+            gridItemStyling gridItem
+    in
+        case gridItem.content of
+            Content orientation scale movie menus ->
+                let
+                    { height, width } =
+                        dimension scale orientation
+                in
+                    div
+                        [ styles
+                        , (onMouseEnter (ChangeMovie (ShowHoverMenu True) index))
+                        , (onMouseLeave (ChangeMovie (ShowHoverMenu False) index))
                         ]
-                      )
-                    , (onMouseEnter (ChangeMovie (ToggleMenu True) index))
-                    , (onMouseLeave (ChangeMovie (ChangeMode False) index))
-                    ]
-                    ((List.filterMap identity [ (Maybe.map (videoTagView model index) movie) ])
-                        ++ (helperViews model.collectionMovies gridItem.content index)
-                    )
+                        ((List.filterMap identity [ (Maybe.map (videoTagView model index) movie) ])
+                            ++ (helperViews model.collectionMovies gridItem.content index)
+                        )
 
-        _ ->
-            Html.text ""
+            Initial ->
+                div
+                    [ styles
+                    ]
+                    [ ul []
+                        [ (Html.text "vertical")
+                        , changeButton (ChangeMovie (ContentChange (Picking Vertical Small)) index) (text "S")
+                        , changeButton (ChangeMovie (ContentChange (Picking Vertical Medium)) index) (text "M")
+                        , changeButton (ChangeMovie (ContentChange (Picking Vertical Large)) index) (text "L")
+                        , (Html.text
+                            "horizontal"
+                          )
+                        , changeButton (ChangeMovie (ContentChange (Picking Horizontal Small)) index) (text "S")
+                        , changeButton (ChangeMovie (ContentChange (Picking Horizontal Medium)) index) (text "M")
+                        , changeButton (ChangeMovie (ContentChange (Picking Horizontal Large)) index) (text "L")
+                        ]
+                    ]
+
+            Picking orientation scale ->
+                div
+                    [ styles
+                    ]
+                    [ videoPicker index model.collectionMovies orientation ]
 
 
 view : Model -> Html Msg
