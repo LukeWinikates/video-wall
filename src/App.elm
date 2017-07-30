@@ -224,7 +224,7 @@ hoverMenu index orientation =
     (div
         [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
         [ div []
-            [ dragButton (\p -> (DragMovie index (DragEvent Start p))) (FontAwesome.arrows colors.color.thunder 12)
+            [ dragButton ((DragEvent Start) >> (DragMovie index)) (FontAwesome.arrows colors.color.thunder 12)
             , changeButton (ChangeMovie (Rotate orientation) index) (FontAwesome.undo colors.color.thunder 12)
             , changeButton (Remove index) (FontAwesome.close colors.color.thunder 12)
             ]
