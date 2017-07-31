@@ -108,10 +108,10 @@ setMovie : Movie -> GridItem -> GridItem
 setMovie newMovie gridItem =
     case gridItem.content of
         Content o s m ms ->
-            { gridItem | content = Content o s (Just newMovie) ms }
+            { gridItem | content = Content o s newMovie ms }
 
         Picking o s ->
-            { gridItem | content = Content o s (Just newMovie) defaultMenuState }
+            { gridItem | content = Content o s newMovie defaultMenuState }
 
         _ ->
             gridItem

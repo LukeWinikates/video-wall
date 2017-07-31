@@ -25,7 +25,7 @@ type alias MenuState =
 type GridContent
     = Initial
     | Picking Orientation Scale
-    | Content Orientation Scale (Maybe Movie) MenuState
+    | Content Orientation Scale Movie MenuState
 
 
 type alias Model =
@@ -50,14 +50,19 @@ hydrate collection definition =
     { top = definition.top
     , left = definition.left
     , content =
-        Content
-            definition.orientation
-            definition.scale
-            (Movie.findById
-                (Movie.fromCollection collection)
-                definition.movieId
-            )
-            defaultMenuState
+        (Movie.findById
+            (Movie.fromCollection collection)
+            definition.movieId
+        )
+            |> Maybe.map
+                (\m ->
+                    Content
+                        definition.orientation
+                        definition.scale
+                        m
+                        defaultMenuState
+                )
+            |> Maybe.withDefault (Picking definition.orientation definition.scale)
     }
 
 
@@ -102,7 +107,7 @@ frameToString { content, top, left } =
                   )
                 ]
 
-            Content orientation scale (Just movie) menu ->
+            Content orientation scale movie menu ->
                 [ (case orientation of
                     Horizontal ->
                         "H"
@@ -122,9 +127,6 @@ frameToString { content, top, left } =
                   )
                 , movie.id
                 ]
-
-            _ ->
-                []
     )
         |> String.join "-"
 

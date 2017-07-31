@@ -38,7 +38,6 @@ import Time exposing (Time)
 -- TODO: allow for closing of the "Initial" view
 -- TODO: picker looks better for the Picking view
 -- TODO: consolidate the size-setting code in gridItemView
--- TODO: make "maybe" state for videos turn into Picking mode
 -- TODO: fix url parsing / url generation
 
 
@@ -381,7 +380,7 @@ gridMovieView model index gridItem =
                         , (onMouseEnter (ChangeMovie (ShowHoverMenu True) index))
                         , (onMouseLeave (ChangeMovie (ShowHoverMenu False) index))
                         ]
-                        ((List.filterMap identity [ (Maybe.map (videoTagView model index) movie) ])
+                        ([ videoTagView model index movie ]
                             ++ (helperViews model.collectionMovies gridItem.content index)
                         )
 
