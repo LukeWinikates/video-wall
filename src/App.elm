@@ -3,25 +3,26 @@ module App exposing (..)
 import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
 import DomHelpers exposing (px, snap)
+import Dragging exposing (..)
 import FontAwesome
+import Geometry exposing (..)
 import GuideLines exposing (guideLines)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Html.Events exposing (..)
+import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Mouse exposing (Position)
-import Geometry exposing (..)
-import Navigation exposing (..)
-import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
-import Movie exposing (..)
-import Json.Decode exposing (Decoder)
-import Primitives exposing (resultToMaybe)
-import Model exposing (GridItem, GridContent(..), Model, gridMoviesFromUrlString, toUrl)
+import Model exposing (GridItem, GridContent(..), Model, gridMoviesFromUrlString)
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
-import Dragging exposing (..)
+import Model.Serialize exposing (toUrl)
+import Mouse exposing (Position)
+import Movie exposing (..)
+import Navigation exposing (..)
+import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
+import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 
 
 -- TODO: something for saving curated collections/switching between collections, ala codepen
@@ -38,7 +39,6 @@ import Time exposing (Time)
 -- TODO: allow for closing of the "Initial" view
 -- TODO: picker looks better for the Picking view
 -- TODO: consolidate the size-setting code in gridItemView
--- TODO: fix url parsing / url generation
 
 
 colors =

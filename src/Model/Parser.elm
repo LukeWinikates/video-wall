@@ -35,7 +35,7 @@ dash =
 
 movie : Parser s ItemDescription
 movie =
-    (\orientation scale top left movieId ->
+    (\top left orientation scale movieId ->
         { orientation = orientation
         , scale = scale
         , top = top
@@ -43,10 +43,10 @@ movie =
         , movieId = movieId
         }
     )
-        <$> orientation
+        <$> int
+        <*> (dash *> int)
+        <*> (dash *> orientation)
         <*> (dash *> scale)
-        <*> (dash *> int)
-        <*> (dash *> int)
         <*> (dash *> (toString <$> int) <* end)
 
 
