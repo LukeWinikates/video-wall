@@ -8,7 +8,7 @@ import FontAwesome
 import Geometry exposing (Orientation(Horizontal, Vertical), Scale(..), dimension)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onMouseOut, onMouseOver)
+import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Model exposing (GridContent(Initial, Picking), GridItem)
 import Model.Mutate exposing (Mutation(ContentChange))
 
