@@ -23,6 +23,27 @@ pickerButton orientation scale index content =
         [ text content ]
 
 
+guideView : Maybe ( Orientation, Scale ) -> Html Msg
+guideView maybeGuide =
+    let
+        { height, width } =
+            maybeGuide
+                |> Maybe.map (uncurry <| flip dimension)
+                |> Maybe.withDefault { height = 200, width = 200 }
+    in
+        div
+            [ style
+                [ ( "border", "5px dashed black" )
+                , ( "box-sizing", "border-box" )
+                , ( "border-radius", "2px" )
+                , ( "background-color", colors.hex.graniteGray )
+                , ( "width", width |> snap |> px )
+                , ( "height", height |> snap |> px )
+                ]
+            ]
+            []
+
+
 sizePickerView : GridItem -> Maybe ( Orientation, Scale ) -> Int -> Html Msg
 sizePickerView item maybeGuide index =
     div
@@ -35,35 +56,14 @@ sizePickerView item maybeGuide index =
              ]
             )
         ]
-        [ div
-            [ style
-                ((Maybe.map
-                    (\( o, s ) ->
-                        dimension s o
-                            |> (\{ height, width } ->
-                                    [ ( "border", "5px dashed black" )
-                                    , ( "box-sizing", "border-box" )
-                                    , ( "width", width |> snap |> px )
-                                    , ( "height", height |> snap |> px )
-                                    ]
-                               )
-                    )
-                    maybeGuide
-                 )
-                    |> Maybe.withDefault []
-                )
-            ]
-            []
+        [ guideView maybeGuide
         , div
             [ style
-                [ ( "border", "5px dashed black" )
-                , ( "border-radius", "2px" )
-                , ( "box-sizing", "border-box" )
-                , ( "padding", "5px" )
+                [ ( "box-sizing", "border-box" )
+                , ( "padding", "10px" )
                 , ( "top", "0" )
                 , ( "left", "0" )
                 , ( "position", "absolute" )
-                , ( "background-color", colors.hex.graniteGray )
                 , ( "width", 200 |> snap |> px )
                 , ( "height", 200 |> snap |> px )
                 ]

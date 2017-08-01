@@ -40,9 +40,8 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO: when should the snapping *actually* happen?
 -- TODO: store last interaction time when a mutation happens
 -- TODO: some kind of affordance indicating that clicking on the grid lets you add a movie
--- TODO: allow for closing of the "Initial" view
--- TODO: picker looks better for the Picking view
--- TODO: consolidate the size-setting code in gridItemView
+-- TODO: movie picker isn't that nice, and can't be closed
+-- TODO: the different states for the process of adding an item feel disjointed
 
 
 type Route
