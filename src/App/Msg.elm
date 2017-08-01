@@ -7,7 +7,7 @@ import Navigation
 
 
 type Msg
-    = ChangeMovie Mutation Int
+    = ChangeItem Mutation Int
     | UrlChange Navigation.Location
     | NewMovie Position
     | DragMovie Int DragEvent

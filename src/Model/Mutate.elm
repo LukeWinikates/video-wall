@@ -152,7 +152,7 @@ newItem position model =
             model.movies
                 ++ [ { top = position.y
                      , left = position.x
-                     , content = Initial
+                     , content = Initial Nothing
                      }
                    ]
     }

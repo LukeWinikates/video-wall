@@ -23,7 +23,7 @@ type alias MenuState =
 
 
 type GridContent
-    = Initial
+    = Initial (Maybe ( Orientation, Scale ))
     | Picking Orientation Scale
     | Content Orientation Scale Movie MenuState
 

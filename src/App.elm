@@ -106,7 +106,7 @@ update action model =
             ( model, model |> toUrl |> Navigation.modifyUrl )
     in
         case action of
-            ChangeMovie mutation index ->
+            ChangeItem mutation index ->
                 wrap (applyMutationAtIndex mutation index model)
 
             Remove index ->
@@ -133,7 +133,7 @@ movieItem : Int -> Movie -> Html Msg
 movieItem index subject =
     li [ (style [ ( "padding", "4px" ) ]) ]
         [ a
-            [ onClick (ChangeMovie (Swap subject) index)
+            [ onClick (ChangeItem (Swap subject) index)
             , (href "#")
             , (style
                 [ ( "color", colors.hex.thunder )
@@ -165,13 +165,13 @@ hoverMenu index orientation =
         [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "left", "0" ) ] ]
         [ div []
             [ dragButton ((DragEvent Start) >> (DragMovie index)) (FontAwesome.arrows colors.color.thunder 12)
-            , changeButton (ChangeMovie (Rotate orientation) index) (FontAwesome.undo colors.color.thunder 12)
+            , changeButton (ChangeItem (Rotate orientation) index) (FontAwesome.undo colors.color.thunder 12)
             , changeButton (Remove index) (FontAwesome.close colors.color.thunder 12)
             ]
         , div []
-            [ changeButton (ChangeMovie (Resize Small) index) (text "S")
-            , changeButton (ChangeMovie (Resize Medium) index) (text "M")
-            , changeButton (ChangeMovie (Resize Large) index) (text "L")
+            [ changeButton (ChangeItem (Resize Small) index) (text "S")
+            , changeButton (ChangeItem (Resize Medium) index) (text "M")
+            , changeButton (ChangeItem (Resize Large) index) (text "L")
             ]
         ]
     )
@@ -278,7 +278,7 @@ videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
         [ (loop True)
-        , (onClick (ChangeMovie (ShowPicker True) index))
+        , (onClick (ChangeItem (ShowPicker True) index))
         , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
         , (volume 0.005)
         , (style
@@ -310,15 +310,15 @@ gridMovieView model index gridItem =
             Content orientation scale movie menus ->
                 div
                     [ styles
-                    , (onMouseEnter (ChangeMovie (ShowHoverMenu True) index))
-                    , (onMouseLeave (ChangeMovie (ShowHoverMenu False) index))
+                    , (onMouseEnter (ChangeItem (ShowHoverMenu True) index))
+                    , (onMouseLeave (ChangeItem (ShowHoverMenu False) index))
                     ]
                     ([ videoTagView model index movie ]
                         ++ (helperViews model.collectionMovies gridItem.content index)
                     )
 
-            Initial ->
-                sizePickerView gridItem index
+            Initial preview ->
+                sizePickerView gridItem preview index
 
             Picking orientation scale ->
                 div
