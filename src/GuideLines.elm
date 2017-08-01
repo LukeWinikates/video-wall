@@ -1,6 +1,6 @@
 module GuideLines exposing (guideLines)
 
-import DomHelpers exposing (px, snap)
+import App.Grid exposing (px, snap)
 import Geometry exposing (Orientation, Scale, dimension)
 import Model exposing (GridContent(Content), GridItem, Model)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)

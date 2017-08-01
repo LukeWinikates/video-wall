@@ -1,8 +1,12 @@
 module App exposing (..)
 
+import App.Buttons exposing (changeButton, dragButton)
+import App.Colors exposing (colors)
+import App.Grid exposing (px, snap, videoBorderWidth)
+import App.Msg exposing (Msg(..))
+import App.SizePicker exposing (sizePickerView)
 import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
-import DomHelpers exposing (px, snap)
 import Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
@@ -39,22 +43,6 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO: allow for closing of the "Initial" view
 -- TODO: picker looks better for the Picking view
 -- TODO: consolidate the size-setting code in gridItemView
-
-
-colors =
-    { hex =
-        { thunder = "#3A3238"
-        , platinum = "#E2E2E2"
-        , graniteGray = "#636B61"
-        , mistyRose = "#F5E3E0"
-        }
-    , color =
-        { thunder = Color.rgb 58 50 56
-        , platinum = Color.rgb 226 226 226
-        , graniteGray = Color.rgb 99 107 97
-        , mistyRose = Color.rgb 245 227 224
-        }
-    }
 
 
 type Route
@@ -94,14 +82,6 @@ modelFrom (AppRoute maybeCollection maybeMovies) =
 
         _ ->
             Model.empty
-
-
-type Msg
-    = ChangeMovie Mutation Int
-    | UrlChange Navigation.Location
-    | NewMovie Position
-    | DragMovie Int DragEvent
-    | Remove Int
 
 
 subscriptions : Model -> Sub Msg
@@ -164,45 +144,6 @@ movieItem index subject =
             [ text subject.description
             ]
         ]
-
-
-movieButton : List (Attribute Msg) -> List (Html Msg) -> Html Msg
-movieButton attributes content =
-    button
-        (attributes
-            ++ [ style
-                    [ ( "background-color", colors.hex.mistyRose )
-                    , ( "border-radius", "2px" )
-                    , ( "color", colors.hex.thunder )
-                    , ( "min-width", "3em" )
-                    , ( "font-weight", "bold" )
-                    , ( "height", "24px" )
-                    , ( "border", "none" )
-                    , ( "margin", "5px" )
-                    , ( "padding", "5px 10px" )
-                    ]
-               ]
-        )
-        content
-
-
-changeButton : Msg -> Html Msg -> Html Msg
-changeButton msg content =
-    movieButton
-        [ onClick msg ]
-        [ content ]
-
-
-dragButton : (Mouse.Position -> Msg) -> Html Msg -> Html Msg
-dragButton msg icon =
-    movieButton
-        [ onMouseDownWithDecoder msg ]
-        [ icon ]
-
-
-onMouseDownWithDecoder : (Mouse.Position -> Msg) -> Attribute Msg
-onMouseDownWithDecoder f =
-    on "mousedown" (Json.Decode.map f Mouse.position)
 
 
 volume : Float -> Attribute msg
@@ -335,32 +276,28 @@ gridItemStyling item =
 
 videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
-    let
-        videoBorderWidth =
-            10
-    in
-        video
-            [ (loop True)
-            , (onClick (ChangeMovie (ShowPicker True) index))
-            , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
-            , (volume 0.005)
-            , (style
-                [ ( case movie.orientation of
-                        Horizontal ->
-                            "max-height"
+    video
+        [ (loop True)
+        , (onClick (ChangeMovie (ShowPicker True) index))
+        , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
+        , (volume 0.005)
+        , (style
+            [ ( case movie.orientation of
+                    Horizontal ->
+                        "max-height"
 
-                        Vertical ->
-                            "max-width"
-                  , "calc(100% - " ++ ((2 * videoBorderWidth) |> px) ++ ")"
-                  )
-                , ( "border", (videoBorderWidth |> px) ++ " solid " ++ colors.hex.thunder )
-                , ( "border-radius", "2px" )
-                , ( "margin", "auto" )
-                ]
+                    Vertical ->
+                        "max-width"
+              , "calc(100% - " ++ ((2 * videoBorderWidth) |> px) ++ ")"
               )
-            , (autoplay True)
+            , ( "border", (videoBorderWidth |> px) ++ " solid " ++ colors.hex.thunder )
+            , ( "border-radius", "2px" )
+            , ( "margin", "auto" )
             ]
-            []
+          )
+        , (autoplay True)
+        ]
+        []
 
 
 gridMovieView : Model -> Int -> GridItem -> Html Msg
@@ -371,36 +308,17 @@ gridMovieView model index gridItem =
     in
         case gridItem.content of
             Content orientation scale movie menus ->
-                let
-                    { height, width } =
-                        dimension scale orientation
-                in
-                    div
-                        [ styles
-                        , (onMouseEnter (ChangeMovie (ShowHoverMenu True) index))
-                        , (onMouseLeave (ChangeMovie (ShowHoverMenu False) index))
-                        ]
-                        ([ videoTagView model index movie ]
-                            ++ (helperViews model.collectionMovies gridItem.content index)
-                        )
-
-            Initial ->
                 div
                     [ styles
+                    , (onMouseEnter (ChangeMovie (ShowHoverMenu True) index))
+                    , (onMouseLeave (ChangeMovie (ShowHoverMenu False) index))
                     ]
-                    [ ul []
-                        [ (Html.text "vertical")
-                        , changeButton (ChangeMovie (ContentChange (Picking Vertical Small)) index) (text "S")
-                        , changeButton (ChangeMovie (ContentChange (Picking Vertical Medium)) index) (text "M")
-                        , changeButton (ChangeMovie (ContentChange (Picking Vertical Large)) index) (text "L")
-                        , (Html.text
-                            "horizontal"
-                          )
-                        , changeButton (ChangeMovie (ContentChange (Picking Horizontal Small)) index) (text "S")
-                        , changeButton (ChangeMovie (ContentChange (Picking Horizontal Medium)) index) (text "M")
-                        , changeButton (ChangeMovie (ContentChange (Picking Horizontal Large)) index) (text "L")
-                        ]
-                    ]
+                    ([ videoTagView model index movie ]
+                        ++ (helperViews model.collectionMovies gridItem.content index)
+                    )
+
+            Initial ->
+                sizePickerView gridItem index
 
             Picking orientation scale ->
                 div

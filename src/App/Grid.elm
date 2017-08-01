@@ -1,4 +1,8 @@
-module DomHelpers exposing (px, snap)
+module App.Grid exposing (videoBorderWidth, px, snap)
+
+
+videoBorderWidth =
+    10
 
 
 px : a -> String
