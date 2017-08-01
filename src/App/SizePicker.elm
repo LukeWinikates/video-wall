@@ -17,52 +17,59 @@ pickerButton : Orientation -> Scale -> Int -> String -> Html Msg
 pickerButton orientation scale index content =
     movieButton
         [ onMouseEnter (ChangeItem (ContentChange (Initial (Just ( orientation, scale )))) index)
-        , onMouseOut (ChangeItem (ContentChange (Initial Nothing)) index)
+        , onMouseLeave (ChangeItem (ContentChange (Initial Nothing)) index)
         , onClick (ChangeItem (ContentChange (Picking orientation scale)) index)
         ]
         [ text content ]
-
-
-guideView : Orientation -> Scale -> Html Msg
-guideView orientation scale =
-    let
-        { height, width } =
-            dimension scale orientation
-    in
-        div
-            [ style
-                [ ( "border", "1px dashed black" )
-                , ( "position", "absolute" )
-                , ( "left", -10 |> snap |> px )
-                , ( "width", width |> snap |> px )
-                , ( "top", -10 |> snap |> px )
-                , ( "height", height |> snap |> px )
-                ]
-            ]
-            []
 
 
 sizePickerView : GridItem -> Maybe ( Orientation, Scale ) -> Int -> Html Msg
 sizePickerView item maybeGuide index =
     div
         [ style
-            [ ( "position", "absolute" )
-            , ( "left", item.left |> snap |> px )
-            , ( "width", 200 |> snap |> px )
-            , ( "top", item.top |> snap |> px )
-            , ( "height", 200 |> snap |> px )
-            , ( "box-sizing", "border-box" )
-            , ( "text-align", "center" )
-            , ( "border", (videoBorderWidth |> px) ++ " solid " ++ colors.hex.thunder )
-            , ( "border-radius", "2px" )
-            , ( "background-color", colors.hex.thunder )
-            , ( "padding", "10px" )
-            , ( "overflow", "visible" )
-            ]
+            ([ ( "position", "absolute" )
+             , ( "left", item.left |> snap |> px )
+             , ( "top", item.top |> snap |> px )
+             , ( "box-sizing", "border-box" )
+             , ( "text-align", "center" )
+             ]
+            )
         ]
         [ div
+            [ style
+                ((Maybe.map
+                    (\( o, s ) ->
+                        dimension s o
+                            |> (\{ height, width } ->
+                                    [ ( "border", "5px dashed black" )
+                                    , ( "box-sizing", "border-box" )
+                                    , ( "width", width |> snap |> px )
+                                    , ( "height", height |> snap |> px )
+                                    ]
+                               )
+                    )
+                    maybeGuide
+                 )
+                    |> Maybe.withDefault []
+                )
+            ]
             []
-            [ div [ style [ ( "text-align", "right" ) ] ] [ changeButton (Remove index) (FontAwesome.close colors.color.thunder 12) ]
+        , div
+            [ style
+                [ ( "border", "5px dashed black" )
+                , ( "border-radius", "2px" )
+                , ( "box-sizing", "border-box" )
+                , ( "padding", "5px" )
+                , ( "top", "0" )
+                , ( "left", "0" )
+                , ( "position", "absolute" )
+                , ( "background-color", colors.hex.graniteGray )
+                , ( "width", 200 |> snap |> px )
+                , ( "height", 200 |> snap |> px )
+                ]
+            ]
+            [ div [ style [ ( "text-align", "right" ) ] ]
+                [ changeButton (Remove index) (FontAwesome.close colors.color.thunder 12) ]
             , div [ style [ ( "text-align", "left" ) ] ] [ (Html.text "vertical") ]
             , div []
                 [ pickerButton Vertical Small index "S"
@@ -77,5 +84,4 @@ sizePickerView item maybeGuide index =
                 , pickerButton Horizontal Large index "L"
                 ]
             ]
-        , Maybe.map (\( o, s ) -> guideView o s) maybeGuide |> Maybe.withDefault (Html.text "")
         ]
