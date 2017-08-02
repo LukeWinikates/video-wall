@@ -51,7 +51,8 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO: hide tray menu icon when user hasn't interacted for a while
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
-
+-- TODO: look into the mouse events on the mover states - something about fullscreening chrome breaks them. try the other enter/leave events?
+-- TODO: fix the typography, since it's all just default styles
 
 type Route
     = AppRoute (Maybe String) (Maybe String)
