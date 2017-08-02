@@ -28,6 +28,8 @@ import Navigation exposing (..)
 import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
 import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
+import Dom.Video exposing (volume)
+
 
 
 -- TODO topic: sharing
@@ -176,11 +178,6 @@ movieItem index subject =
             [ text subject.description
             ]
         ]
-
-
-volume : Float -> Attribute msg
-volume vol =
-    (property "volume" (Json.Encode.string <| toString <| vol))
 
 
 consIf : Bool -> a -> List a -> List a
