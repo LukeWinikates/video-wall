@@ -13,7 +13,7 @@ import FontAwesome
 import Geometry exposing (..)
 import GuideLines exposing (guideLines)
 import Html exposing (Attribute, Html, a, b, body, button, div, h2, li, text, ul, video)
-import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
+import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, rel, src, style)
 import Html.Events exposing (..)
 import Json.Decode exposing (Decoder)
 import Json.Encode
@@ -353,7 +353,8 @@ view : Model -> Html Msg
 view model =
     body
         []
-        [ div
+        [ Html.node "link" [ href "https://fonts.googleapis.com/css?family=Lato", rel "stylesheet" ] []
+        , div
             [ Html.Attributes.id "background"
             , (onClickElementWithId "background" decodePosition NewMovie)
             , (style
@@ -364,6 +365,7 @@ view model =
                 , ( "display", "flex" )
                 , ( "justify-content", "center" )
                 , ( "align-items", "center" )
+                , ( "font-family", "'Lato', sans-serif" )
                 ]
               )
             ]
