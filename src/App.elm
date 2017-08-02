@@ -51,7 +51,6 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO: hide tray menu icon when user hasn't interacted for a while
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
--- TODO: look into the mouse events on the mover states - something about fullscreening chrome breaks them. try the other enter/leave events?
 -- TODO: fix the typography, since it's all just default styles
 -- TODO: names for the collections
 -- TODO: change buttons for tray to toggle-left and toggle-right icons from FA
@@ -345,8 +344,8 @@ gridMovieView model index gridItem =
             Content orientation scale movie menus ->
                 div
                     [ styles
-                    , (onMouseEnter (ChangeItem (ShowHoverMenu True) index))
-                    , (onMouseLeave (ChangeItem (ShowHoverMenu False) index))
+                    , (onMouseOver (ChangeItem (ShowHoverMenu True) index))
+                    , (onMouseOut (ChangeItem (ShowHoverMenu False) index))
                     ]
                     ([ videoTagView model index movie ]
                         ++ (helperViews model.collectionMovies gridItem.content index)
