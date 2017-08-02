@@ -33,7 +33,13 @@ type alias Model =
     , collection : String
     , collectionMovies : List Movie
     , dragging : Maybe (Dragging.Drag Int)
+    , trayMode : TrayMode
     }
+
+
+type TrayMode
+    = Expanded
+    | Collapsed
 
 
 empty : Model
@@ -42,6 +48,7 @@ empty =
     , collectionMovies = []
     , collection = ""
     , dragging = Nothing
+    , trayMode = Collapsed
     }
 
 

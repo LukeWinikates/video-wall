@@ -11,14 +11,14 @@ import Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
 import GuideLines exposing (guideLines)
-import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
+import Html exposing (Attribute, Html, a, b, body, button, div, h2, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Html.Events exposing (..)
 import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridItem, GridContent(..), Model, gridMoviesFromUrlString)
+import Model exposing (GridContent(..), GridItem, Model, TrayMode(Collapsed, Expanded), gridMoviesFromUrlString)
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
 import Mouse exposing (Position)
@@ -77,6 +77,7 @@ modelFrom (AppRoute maybeCollection maybeMovies) =
             , collection = collectionName
             , collectionMovies = Movie.fromCollection collectionName
             , dragging = Nothing
+            , trayMode = Collapsed
             }
 
         _ ->
@@ -124,8 +125,8 @@ update action model =
             NewMovie position ->
                 wrap (newItem position model)
 
-            ShowMenu ->
-                ( model, Cmd.none )
+            TrayMenu mode ->
+                ( { model | trayMode = mode }, Cmd.none )
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -329,11 +330,29 @@ gridMovieView model index gridItem =
                     [ videoPicker index model.collectionMovies orientation ]
 
 
-menuView : Html Msg
-menuView =
-    div
-        [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
-        [ changeButton ShowMenu (FontAwesome.gear colors.color.thunder 12) ]
+menuView : TrayMode -> Html Msg
+menuView mode =
+    case mode of
+        Collapsed ->
+            div
+                [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
+                [ changeButton (TrayMenu Expanded) (FontAwesome.gear colors.color.thunder 12) ]
+
+        Expanded ->
+            div
+                [ style
+                    [ ( "position", "absolute" )
+                    , ( "top", 0 |> px )
+                    , ( "right", 0 |> px )
+                    , ( "padding", 20 |> px )
+                    , ( "height", "100vh" )
+                    , ( "width", "400px" )
+                    , ( "background-color", colors.hex.mistyRose )
+                    , ( "border-left", "2px solid " ++ colors.hex.thunder )
+                    ]
+                ]
+                [ h2 [] [ Html.text "Collections" ]
+                ]
 
 
 view : Model -> Html Msg
@@ -362,7 +381,7 @@ view model =
                    )
                     |> Maybe.withDefault []
                   )
-                , [ menuView ]
+                , [ menuView model.trayMode ]
                 ]
             )
         ]

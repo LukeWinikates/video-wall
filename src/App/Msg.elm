@@ -1,6 +1,7 @@
 module App.Msg exposing (Msg(..))
 
 import Dragging exposing (DragEvent)
+import Model exposing (TrayMode)
 import Model.Mutate exposing (Mutation)
 import Mouse exposing (Position)
 import Navigation
@@ -12,4 +13,4 @@ type Msg
     | NewMovie Position
     | DragMovie Int DragEvent
     | Remove Int
-    | ShowMenu
+    | TrayMenu TrayMode
