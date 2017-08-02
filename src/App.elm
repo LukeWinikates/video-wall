@@ -351,7 +351,8 @@ menuView mode =
                     , ( "border-left", "2px solid " ++ colors.hex.thunder )
                     ]
                 ]
-                [ h2 [] [ Html.text "Collections" ]
+                [ changeButton (TrayMenu Collapsed) (FontAwesome.arrow_right colors.color.thunder 12)
+                , h2 [] [ Html.text "Collections" ]
                 ]
 
 
