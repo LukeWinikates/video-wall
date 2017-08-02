@@ -53,6 +53,19 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
 -- TODO: look into the mouse events on the mover states - something about fullscreening chrome breaks them. try the other enter/leave events?
 -- TODO: fix the typography, since it's all just default styles
+-- TODO: names for the collections
+-- TODO: change buttons for tray to toggle-left and toggle-right icons from FA
+-- TODO category: user feedback
+-- TODO: fold tray menu away when user clicks a collection?
+-- TODO: rotate button is confusing, because the first thing it does is make you pick a new video
+-- TODO: no immediate feedback for switching collections (maybe indicate collection name change)
+-- TODO: provide preset layouts to start from?
+-- TODO: something to randomize video selection
+-- TODO: size selector for Initial state when adding a new item is confusing
+-- TODO: maybe reconsider interaction starting with clicking an arbitrary spot. Start with video selection instead, then position? The clicked position is probably just going to get adjusted later
+-- TODO: an extra option that includes videos from all the collections
+-- TODO: something that boosts z-index of last thing you touched, so that it stays on top
+
 
 type Route
     = AppRoute (Maybe String) (Maybe String)
