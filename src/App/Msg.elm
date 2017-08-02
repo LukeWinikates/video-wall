@@ -14,3 +14,4 @@ type Msg
     | DragMovie Int DragEvent
     | Remove Int
     | TrayMenu TrayMode
+    | ChangeCollection String

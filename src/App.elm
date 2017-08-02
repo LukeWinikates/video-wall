@@ -30,13 +30,13 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 
 
 -- TODO: something for saving curated collections/switching between collections, ala codepen
--- TODO: building up a layout from scratch is frustrating / if you change collections, there's no easy way to click to change the videos to valid ones for the collection
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
--- TODO: I'm interested in a snap-to-grid style, and maybe that also offers a solution?
+-- TODO: maybe when the menu is open, there's a translucent overlay, playback speed is slowed, and
+--        the collection name and left -> right top -> bottom list of movie titles shows up
+-- TODO: when the collection switches, randomly populate the videos
+-- TODO: when switching videos, highlight the ones that aren't already onscreen
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
--- TODO: eliminate error state when movie is Nothing and the element becomes unhoverable
--- TODO: menu for switching between collections
 -- TODO: when should the snapping *actually* happen?
 -- TODO: store last interaction time when a mutation happens
 -- TODO: some kind of affordance indicating that clicking on the grid lets you add a movie
@@ -127,6 +127,15 @@ update action model =
 
             TrayMenu mode ->
                 ( { model | trayMode = mode }, Cmd.none )
+
+            ChangeCollection collectionName ->
+                wrap
+                    ({ model
+                        | movies = []
+                        , collection = collectionName
+                        , collectionMovies = Movie.fromCollection collectionName
+                     }
+                    )
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -330,6 +339,11 @@ gridMovieView model index gridItem =
                     [ videoPicker index model.collectionMovies orientation ]
 
 
+collectionSwitchLink : String -> Html Msg
+collectionSwitchLink collectionName =
+    div [] [ a [ onClick (ChangeCollection collectionName) ] [ Html.text collectionName ] ]
+
+
 menuView : TrayMode -> Html Msg
 menuView mode =
     case mode of
@@ -351,9 +365,11 @@ menuView mode =
                     , ( "border-left", "2px solid " ++ colors.hex.thunder )
                     ]
                 ]
-                [ changeButton (TrayMenu Collapsed) (FontAwesome.arrow_right colors.color.thunder 12)
-                , h2 [] [ Html.text "Collections" ]
-                ]
+                ([ changeButton (TrayMenu Collapsed) (FontAwesome.arrow_right colors.color.thunder 12)
+                 , h2 [] [ Html.text "Collections" ]
+                 ]
+                    ++ (List.map collectionSwitchLink Movie.collections)
+                )
 
 
 view : Model -> Html Msg

@@ -1,4 +1,4 @@
-module Movie exposing (Movie, byOrientation, findById, fileName, fromCollection)
+module Movie exposing (Movie, byOrientation, findById, fileName, fromCollection, collections)
 
 import Dict exposing (Dict)
 import Geometry exposing (..)
@@ -26,6 +26,11 @@ fromCollection collection =
 fileName : Movie -> String
 fileName movie =
     "IMG_" ++ movie.id ++ ".m4v"
+
+
+collections : List String
+collections =
+    Dict.keys movies
 
 
 movies : Dict String (List Movie)
