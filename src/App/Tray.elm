@@ -23,7 +23,7 @@ menuView mode =
         Collapsed ->
             div
                 [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
-                [ changeButton (TrayMenu Expanded) (FontAwesome.gear colors.color.thunder 12) ]
+                [ changeButton (TrayMenu Expanded) (FontAwesome.toggle_left colors.color.thunder 16) ]
 
         Expanded ->
             div
@@ -38,7 +38,7 @@ menuView mode =
                     , ( "border-left", "2px solid " ++ colors.hex.thunder )
                     ]
                 ]
-                ([ changeButton (TrayMenu Collapsed) (FontAwesome.arrow_right colors.color.thunder 12)
+                ([ changeButton (TrayMenu Collapsed) (FontAwesome.toggle_right colors.color.thunder 16)
                  , h2 [] [ Html.text "Collections" ]
                  ]
                     ++ (List.map collectionSwitchLink Movie.collections)

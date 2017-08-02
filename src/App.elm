@@ -52,7 +52,6 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
 -- TODO: names for the collections
--- TODO: change buttons for tray to toggle-left and toggle-right icons from FA
 -- TODO category: user feedback
 -- TODO: fold tray menu away when user clicks a collection?
 -- TODO: rotate button is confusing, because the first thing it does is make you pick a new video
