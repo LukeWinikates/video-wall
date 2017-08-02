@@ -29,20 +29,27 @@ import Time exposing (Time)
 import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 
 
+-- TODO topic: sharing
 -- TODO: something for saving curated collections/switching between collections, ala codepen
+-- TODO topic: showing off
 -- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
--- TODO: maybe when the menu is open, there's a translucent overlay, playback speed is slowed, and
---        the collection name and left -> right top -> bottom list of movie titles shows up
+-- TODO: when the tray is open, show a translucent overlay, slow playback speed, and
+--        show the collection name and list of movie titles sorted by distance from top left
+-- TODO topic: composition
 -- TODO: when the collection switches, randomly populate the videos
 -- TODO: when switching videos, highlight the ones that aren't already onscreen
+-- TODO topic: the grid / dragging :
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
--- TODO: when should the snapping *actually* happen?
--- TODO: store last interaction time when a mutation happens
+-- TODO topic: the item adding workflow
 -- TODO: some kind of affordance indicating that clicking on the grid lets you add a movie
 -- TODO: movie picker isn't that nice, and can't be closed
 -- TODO: the different states for the process of adding an item feel disjointed
-
+-- TODO topic: tray menu
+-- TODO: store last interaction time when a mutation happens
+-- TODO: hide tray menu icon when user hasn't interacted for a while
+-- TODO topic: refactoring
+-- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
 
 type Route
     = AppRoute (Maybe String) (Maybe String)
