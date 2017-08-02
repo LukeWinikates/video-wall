@@ -1,6 +1,6 @@
 module App exposing (..)
 
-import App.Buttons exposing (changeButton, dragButton)
+import App.Buttons exposing (changeButton, dragButton, movieButton)
 import App.Colors exposing (colors)
 import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
@@ -123,6 +123,9 @@ update action model =
 
             NewMovie position ->
                 wrap (newItem position model)
+
+            ShowMenu ->
+                ( model, Cmd.none )
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -326,6 +329,13 @@ gridMovieView model index gridItem =
                     [ videoPicker index model.collectionMovies orientation ]
 
 
+menuView : Html Msg
+menuView =
+    div
+        [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
+        [ changeButton ShowMenu (FontAwesome.gear colors.color.thunder 12) ]
+
+
 view : Model -> Html Msg
 view model =
     body
@@ -344,13 +354,15 @@ view model =
                 ]
               )
             ]
-            (List.append
-                (indexedMap (gridMovieView model) model.movies)
-                ((Maybe.map
-                    (always (guideLines model))
-                    model.dragging
-                 )
+            (List.concat
+                [ (indexedMap (gridMovieView model) model.movies)
+                , ((Maybe.map
+                        (always (guideLines model))
+                        model.dragging
+                   )
                     |> Maybe.withDefault []
-                )
+                  )
+                , [ menuView ]
+                ]
             )
         ]

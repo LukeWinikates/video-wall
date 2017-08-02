@@ -12,3 +12,4 @@ type Msg
     | NewMovie Position
     | DragMovie Int DragEvent
     | Remove Int
+    | ShowMenu
