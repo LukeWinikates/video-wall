@@ -5,6 +5,7 @@ import App.Colors exposing (colors)
 import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
 import App.SizePicker exposing (sizePickerView)
+import App.Tray as Tray
 import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
 import Dragging exposing (..)
@@ -50,6 +51,7 @@ import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 -- TODO: hide tray menu icon when user hasn't interacted for a while
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
+
 
 type Route
     = AppRoute (Maybe String) (Maybe String)
@@ -346,39 +348,6 @@ gridMovieView model index gridItem =
                     [ videoPicker index model.collectionMovies orientation ]
 
 
-collectionSwitchLink : String -> Html Msg
-collectionSwitchLink collectionName =
-    div [] [ a [ onClick (ChangeCollection collectionName) ] [ Html.text collectionName ] ]
-
-
-menuView : TrayMode -> Html Msg
-menuView mode =
-    case mode of
-        Collapsed ->
-            div
-                [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
-                [ changeButton (TrayMenu Expanded) (FontAwesome.gear colors.color.thunder 12) ]
-
-        Expanded ->
-            div
-                [ style
-                    [ ( "position", "absolute" )
-                    , ( "top", 0 |> px )
-                    , ( "right", 0 |> px )
-                    , ( "padding", 20 |> px )
-                    , ( "height", "100vh" )
-                    , ( "width", "400px" )
-                    , ( "background-color", colors.hex.mistyRose )
-                    , ( "border-left", "2px solid " ++ colors.hex.thunder )
-                    ]
-                ]
-                ([ changeButton (TrayMenu Collapsed) (FontAwesome.arrow_right colors.color.thunder 12)
-                 , h2 [] [ Html.text "Collections" ]
-                 ]
-                    ++ (List.map collectionSwitchLink Movie.collections)
-                )
-
-
 view : Model -> Html Msg
 view model =
     body
@@ -405,7 +374,7 @@ view model =
                    )
                     |> Maybe.withDefault []
                   )
-                , [ menuView model.trayMode ]
+                , [ Tray.menuView model.trayMode ]
                 ]
             )
         ]
