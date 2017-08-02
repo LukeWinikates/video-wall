@@ -1,6 +1,6 @@
 module Model.Mutate exposing (..)
 
-import Dragging exposing (Drag)
+import Dom.Dragging as Dragging exposing (Drag)
 import Geometry exposing (Orientation(Horizontal, Vertical), Scale(Large, Medium, Small))
 import Model exposing (..)
 import List.Extra

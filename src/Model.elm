@@ -1,6 +1,6 @@
 module Model exposing (..)
 
-import Dragging
+import Dom.Dragging as Dragging
 import Movie exposing (..)
 import Movie exposing (..)
 import Geometry exposing (..)

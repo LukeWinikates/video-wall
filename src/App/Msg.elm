@@ -1,6 +1,6 @@
 module App.Msg exposing (Msg(..))
 
-import Dragging exposing (DragEvent)
+import Dom.Dragging exposing (DragEvent)
 import Model exposing (TrayMode)
 import Model.Mutate exposing (Mutation)
 import Mouse exposing (Position)

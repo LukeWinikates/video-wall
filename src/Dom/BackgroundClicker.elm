@@ -1,4 +1,4 @@
-module BackgroundClicker exposing (decodePosition, onClickElementWithId)
+module Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
 
 import Html exposing (Attribute)
 import Html.Events exposing (onWithOptions)

@@ -6,9 +6,9 @@ import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
 import App.SizePicker exposing (sizePickerView)
 import App.Tray as Tray
-import BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Color
-import Dragging exposing (..)
+import Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
+import Dom.Dragging as Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
 import GuideLines exposing (guideLines)
@@ -29,7 +29,6 @@ import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
 import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
 import Dom.Video exposing (volume)
-
 
 
 -- TODO topic: sharing

@@ -1,4 +1,4 @@
-module Dragging exposing (..)
+module Dom.Dragging exposing (..)
 
 import Mouse
 
