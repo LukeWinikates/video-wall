@@ -19,7 +19,7 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, TrayMode(Collapsed, Expanded), gridMoviesFromUrlString)
+import Model exposing (GridContent(..), GridItem, Model, TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
@@ -92,17 +92,19 @@ init location =
 
 
 modelFrom : Route -> Model
-modelFrom (AppRoute maybeCollection maybeMovies) =
-    case ( maybeCollection, maybeMovies ) of
-        ( Just collectionName, Just movieString ) ->
-            { movies = movieString |> gridMoviesFromUrlString collectionName
-            , collection = collectionName
-            , dragging = Nothing
-            , trayMode = Collapsed
-            }
-
-        _ ->
-            Model.empty
+modelFrom (AppRoute maybeCollection maybeItems) =
+    Maybe.withDefault Model.empty <|
+        (Maybe.map2
+            (\collection itemsString ->
+                { movies = itemsString |> gridItemsFromCommaSeparatedList collection
+                , collection = collection
+                , dragging = Nothing
+                , trayMode = Collapsed
+                }
+            )
+            (Maybe.andThen Movie.fromCollectionId maybeCollection)
+            maybeItems
+        )
 
 
 subscriptions : Model -> Sub Msg
@@ -204,8 +206,8 @@ hoverMenu index orientation =
     )
 
 
-videoPicker : Int -> List Movie -> Orientation -> Html Msg
-videoPicker index collectionMovies orientation =
+videoPicker : Int -> MovieCollection -> Orientation -> Html Msg
+videoPicker index collection orientation =
     (ul
         [ (style
             [ ( "background-color", colors.hex.platinum )
@@ -222,12 +224,12 @@ videoPicker index collectionMovies orientation =
             ]
           )
         ]
-        (List.map (movieItem index) (byOrientation collectionMovies orientation))
+        (List.map (movieItem index) (byOrientation collection orientation))
     )
 
 
-helperViews : List Movie -> GridContent -> Int -> List (Html Msg)
-helperViews collectionMovies content index =
+helperViews : MovieCollection -> GridContent -> Int -> List (Html Msg)
+helperViews collection content index =
     case content of
         Content orientation scale movie menus ->
             ([]
@@ -239,13 +241,13 @@ helperViews collectionMovies content index =
                 |> consIf menus.videoPicker
                     (videoPicker
                         index
-                        collectionMovies
+                        collection
                         orientation
                     )
             )
 
         Picking orientation scale ->
-            [ videoPicker index collectionMovies orientation ]
+            [ videoPicker index collection orientation ]
 
         _ ->
             []
@@ -306,7 +308,7 @@ videoTagView model index movie =
     video
         [ (loop True)
         , (onClick (ChangeItem (ShowPicker True) index))
-        , (src ("/public/" ++ model.collection ++ "/" ++ (fileName movie)))
+        , (src ("/public/" ++ model.collection.id ++ "/" ++ (fileName movie)))
         , (volume 0.005)
         , (style
             [ ( case movie.orientation of
@@ -332,9 +334,6 @@ gridMovieView model index gridItem =
     let
         styles =
             gridItemStyling gridItem
-
-        collectionMovies =
-            Movie.fromCollection model.collection
     in
         case gridItem.content of
             Content orientation scale movie menus ->
@@ -344,7 +343,7 @@ gridMovieView model index gridItem =
                     , (onMouseOut (ChangeItem (ShowHoverMenu False) index))
                     ]
                     ([ videoTagView model index movie ]
-                        ++ (helperViews collectionMovies gridItem.content index)
+                        ++ (helperViews model.collection gridItem.content index)
                     )
 
             Initial preview ->
@@ -354,7 +353,7 @@ gridMovieView model index gridItem =
                 div
                     [ styles
                     ]
-                    [ videoPicker index collectionMovies orientation ]
+                    [ videoPicker index model.collection orientation ]
 
 
 view : Model -> Html Msg

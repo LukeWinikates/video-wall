@@ -1,4 +1,4 @@
-module Movie exposing (Movie, byOrientation, findById, fileName, fromCollection, collections)
+module Movie exposing (Movie, byOrientation, findById, fileName, fromCollectionId, collections, MovieCollection, fallbackCollection)
 
 import Dict exposing (Dict)
 import Geometry exposing (..)
@@ -13,14 +13,22 @@ type alias Movie =
     }
 
 
-byOrientation : List Movie -> Orientation -> List Movie
-byOrientation movies orientation =
-    List.filter (\m -> (m.orientation == orientation)) movies
+type alias MovieCollection =
+    { id : String
+    , title : String
+    , dates : String
+    , movies : List Movie
+    }
 
 
-fromCollection : String -> List Movie
-fromCollection collection =
-    Dict.get collection movies |> withDefault []
+byOrientation : MovieCollection -> Orientation -> List Movie
+byOrientation collection orientation =
+    List.filter (\m -> (m.orientation == orientation)) collection.movies
+
+
+fromCollectionId : String -> Maybe MovieCollection
+fromCollectionId collection =
+    Dict.get collection collectionsDict
 
 
 fileName : Movie -> String
@@ -28,16 +36,13 @@ fileName movie =
     "IMG_" ++ movie.id ++ ".m4v"
 
 
-collections : List String
+collections : List MovieCollection
 collections =
-    Dict.keys movies
-
-
-movies : Dict String (List Movie)
-movies =
-    Dict.fromList
-        [ ( "ironcreek"
-          , [ { id = "6212", orientation = Vertical, description = "Narrow angle through trees" }
+    [ { id = "ironcreek"
+      , title = "Iron Creek"
+      , dates = "May 26 - May 29, 2017"
+      , movies =
+            [ { id = "6212", orientation = Vertical, description = "Narrow angle through trees" }
             , { id = "6216", orientation = Horizontal, description = "Through thick trees" }
             , { id = "6230", orientation = Horizontal, description = "Green water with log in foreground" }
             , { id = "6213", orientation = Vertical, description = "Long distance across open river" }
@@ -54,9 +59,12 @@ movies =
             , { id = "6263", orientation = Horizontal, description = "Water flowing under log" }
             , { id = "6270", orientation = Vertical, description = "View downriver from sitting on log" }
             ]
-          )
-        , ( "lawizwiz"
-          , [ { id = "6360", orientation = Horizontal, description = "Fast water through logs" }
+      }
+    , { id = "lawiswis"
+      , title = "La Wis Wis"
+      , dates = "June 16 - June 17, 2017"
+      , movies =
+            [ { id = "6360", orientation = Horizontal, description = "Fast water through logs" }
             , { id = "6361", orientation = Vertical, description = "Rapids with log in foreground" }
             , { id = "6363", orientation = Vertical, description = "Log's eye view" }
             , { id = "6364", orientation = Vertical, description = "Rocks in shallow water" }
@@ -68,9 +76,12 @@ movies =
             , { id = "6387", orientation = Horizontal, description = "Ripples in a quiet spot" }
             , { id = "6394", orientation = Vertical, description = "The stream turns here" }
             ]
-          )
-        , ( "sanjuan"
-          , [ { id = "6443", orientation = Horizontal, description = "Big wide bay" }
+      }
+    , { id = "sanjuan"
+      , title = "San Juan Island"
+      , dates = "July 1 - July 4, 2017"
+      , movies =
+            [ { id = "6443", orientation = Horizontal, description = "Big wide bay" }
             , { id = "6444", orientation = Vertical, description = "Sun in tree" }
             , { id = "6447", orientation = Horizontal, description = "Island with tree in foreground" }
             , { id = "6450", orientation = Vertical, description = "Looking down onto rocks" }
@@ -101,10 +112,30 @@ movies =
             , { id = "6532", orientation = Horizontal, description = "View from the car" }
             , { id = "6533", orientation = Horizontal, description = "Island view from the ferry" }
             ]
-          )
-        ]
+      }
+    ]
 
 
-findById : List Movie -> String -> Maybe Movie
-findById movies id =
-    movies |> List.filter (\m -> m.id == id) |> List.head
+collectionsDict : Dict String MovieCollection
+collectionsDict =
+    collections
+        |> List.map (\c -> ( c.id, c ))
+        |> Dict.fromList
+
+
+findById : MovieCollection -> String -> Maybe Movie
+findById collection id =
+    collection.movies |> List.filter (\m -> m.id == id) |> List.head
+
+
+
+-- TODO: eliminate this possible state at the routing level
+
+
+fallbackCollection : MovieCollection
+fallbackCollection =
+    { id = ""
+    , title = "Not Found"
+    , dates = ""
+    , movies = []
+    }

@@ -30,9 +30,7 @@ type GridContent
 
 type alias Model =
     { movies : List GridItem
-    , collection :
-        String
-        --    , collectionMovies : List Movie
+    , collection : MovieCollection
     , dragging : Maybe (Dragging.Drag Int)
     , trayMode : TrayMode
     }
@@ -46,19 +44,19 @@ type TrayMode
 empty : Model
 empty =
     { movies = []
-    , collection = ""
+    , collection = Movie.fallbackCollection
     , dragging = Nothing
     , trayMode = Collapsed
     }
 
 
-hydrate : String -> ItemDescription -> GridItem
+hydrate : MovieCollection -> ItemDescription -> GridItem
 hydrate collection definition =
     { top = definition.top
     , left = definition.left
     , content =
         (Movie.findById
-            (Movie.fromCollection collection)
+            collection
             definition.movieId
         )
             |> Maybe.map
@@ -80,6 +78,6 @@ defaultMenuState =
     }
 
 
-gridMoviesFromUrlString : String -> String -> List GridItem
-gridMoviesFromUrlString collectionName movieId =
-    movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.map (hydrate collectionName)
+gridItemsFromCommaSeparatedList : MovieCollection -> String -> List GridItem
+gridItemsFromCommaSeparatedList collection movieId =
+    movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.map (hydrate collection)

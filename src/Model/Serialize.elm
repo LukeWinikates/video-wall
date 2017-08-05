@@ -43,4 +43,4 @@ framesUrlString frames =
 
 toUrl : Model -> String
 toUrl model =
-    "?movies=" ++ (framesUrlString model.movies) ++ "&collection=" ++ model.collection
+    "?movies=" ++ (framesUrlString model.movies) ++ "&collection=" ++ model.collection.id

@@ -9,12 +9,16 @@ import Html exposing (Html, a, div, h2)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Model exposing (TrayMode(Collapsed, Expanded))
-import Movie
+import Movie exposing (MovieCollection)
 
 
-collectionSwitchLink : String -> Html Msg
-collectionSwitchLink collectionName =
-    div [] [ a [ onClick (ChangeCollection collectionName) ] [ Html.text collectionName ] ]
+collectionSwitchLink : MovieCollection -> Html Msg
+collectionSwitchLink collection =
+    div []
+        [ a [ onClick (ChangeCollection collection) ]
+            [ Html.text collection.title
+            ]
+        ]
 
 
 menuView : TrayMode -> Html Msg

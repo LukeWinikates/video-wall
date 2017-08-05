@@ -2,23 +2,20 @@ module Model.MovieSwitcher exposing (replaceMovies)
 
 import Geometry exposing (Orientation(Horizontal, Vertical))
 import Model exposing (GridContent(Content, Initial, Picking), GridItem)
-import Movie exposing (Movie)
+import Movie exposing (Movie, MovieCollection)
 import List.Extra exposing (andMap)
 import List exposing (map)
 import Model.Mutate
 
 
-replaceMovies : List GridItem -> String -> List GridItem
-replaceMovies gridItems collectionName =
+replaceMovies : List GridItem -> MovieCollection -> List GridItem
+replaceMovies gridItems collection =
     let
-        collectionMovies =
-            Movie.fromCollection collectionName
-
         verticals =
-            Movie.byOrientation collectionMovies Vertical
+            Movie.byOrientation collection Vertical
 
         horizontals =
-            Movie.byOrientation collectionMovies Horizontal
+            Movie.byOrientation collection Horizontal
 
         remaining =
             List.filterMap orientationFrom gridItems

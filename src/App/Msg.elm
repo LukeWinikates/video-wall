@@ -4,6 +4,7 @@ import Dom.Dragging exposing (DragEvent)
 import Model exposing (TrayMode)
 import Model.Mutate exposing (Mutation)
 import Mouse exposing (Position)
+import Movie exposing (MovieCollection)
 import Navigation
 
 
@@ -14,4 +15,4 @@ type Msg
     | DragMovie Int DragEvent
     | Remove Int
     | TrayMenu TrayMode
-    | ChangeCollection String
+    | ChangeCollection MovieCollection
