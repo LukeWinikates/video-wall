@@ -30,8 +30,9 @@ type GridContent
 
 type alias Model =
     { movies : List GridItem
-    , collection : String
-    , collectionMovies : List Movie
+    , collection :
+        String
+        --    , collectionMovies : List Movie
     , dragging : Maybe (Dragging.Drag Int)
     , trayMode : TrayMode
     }
@@ -45,7 +46,6 @@ type TrayMode
 empty : Model
 empty =
     { movies = []
-    , collectionMovies = []
     , collection = ""
     , dragging = Nothing
     , trayMode = Collapsed

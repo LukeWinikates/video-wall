@@ -97,7 +97,6 @@ modelFrom (AppRoute maybeCollection maybeMovies) =
         ( Just collectionName, Just movieString ) ->
             { movies = movieString |> gridMoviesFromUrlString collectionName
             , collection = collectionName
-            , collectionMovies = Movie.fromCollection collectionName
             , dragging = Nothing
             , trayMode = Collapsed
             }
@@ -155,7 +154,6 @@ update action model =
                     ({ model
                         | movies = Model.MovieSwitcher.replaceMovies model.movies collectionName
                         , collection = collectionName
-                        , collectionMovies = Movie.fromCollection collectionName
                      }
                     )
 
@@ -334,6 +332,9 @@ gridMovieView model index gridItem =
     let
         styles =
             gridItemStyling gridItem
+
+        collectionMovies =
+            Movie.fromCollection model.collection
     in
         case gridItem.content of
             Content orientation scale movie menus ->
@@ -343,7 +344,7 @@ gridMovieView model index gridItem =
                     , (onMouseOut (ChangeItem (ShowHoverMenu False) index))
                     ]
                     ([ videoTagView model index movie ]
-                        ++ (helperViews model.collectionMovies gridItem.content index)
+                        ++ (helperViews collectionMovies gridItem.content index)
                     )
 
             Initial preview ->
@@ -353,7 +354,7 @@ gridMovieView model index gridItem =
                 div
                     [ styles
                     ]
-                    [ videoPicker index model.collectionMovies orientation ]
+                    [ videoPicker index collectionMovies orientation ]
 
 
 view : Model -> Html Msg
