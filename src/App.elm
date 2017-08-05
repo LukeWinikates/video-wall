@@ -20,6 +20,7 @@ import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
 import Model exposing (GridContent(..), GridItem, Model, TrayMode(Collapsed, Expanded), gridMoviesFromUrlString)
+import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
 import Mouse exposing (Position)
@@ -152,7 +153,7 @@ update action model =
             ChangeCollection collectionName ->
                 wrap
                     ({ model
-                        | movies = []
+                        | movies = Model.MovieSwitcher.replaceMovies model.movies collectionName
                         , collection = collectionName
                         , collectionMovies = Movie.fromCollection collectionName
                      }
