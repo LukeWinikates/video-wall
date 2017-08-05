@@ -39,8 +39,8 @@ import Dom.Video exposing (volume)
 -- TODO: when the tray is open, show a translucent overlay, slow playback speed, and
 --        show the collection name and list of movie titles sorted by distance from top left
 -- TODO topic: composition
--- TODO: when the collection switches, randomly populate the videos
 -- TODO: when switching videos, highlight the ones that aren't already onscreen
+-- TODO: add a "randomize" button
 -- TODO topic: the grid / dragging :
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
@@ -53,18 +53,16 @@ import Dom.Video exposing (volume)
 -- TODO: hide tray menu icon when user hasn't interacted for a while
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
--- TODO: names for the collections
 -- TODO category: user feedback
 -- TODO: fold tray menu away when user clicks a collection?
 -- TODO: rotate button is confusing, because the first thing it does is make you pick a new video
 -- TODO: no immediate feedback for switching collections (maybe indicate collection name change)
 -- TODO: provide preset layouts to start from?
--- TODO: something to randomize video selection
 -- TODO: size selector for Initial state when adding a new item is confusing
 -- TODO: maybe reconsider interaction starting with clicking an arbitrary spot. Start with video selection instead, then position? The clicked position is probably just going to get adjusted later
 -- TODO: an extra option that includes videos from all the collections
 -- TODO: something that boosts z-index of last thing you touched, so that it stays on top
-
+-- TODO: movie list often overflows the container. Display it fullscreen instead?
 
 type Route
     = AppRoute (Maybe String) (Maybe String)
