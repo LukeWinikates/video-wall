@@ -28,7 +28,8 @@ import Movie exposing (..)
 import Navigation exposing (..)
 import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
-import UrlParser exposing (Parser, parseHash, (<?>), stringParam, top)
+
+import UrlParser exposing (..)
 import Dom.Video exposing (volume)
 
 
@@ -64,13 +65,14 @@ import Dom.Video exposing (volume)
 -- TODO: something that boosts z-index of last thing you touched, so that it stays on top
 -- TODO: movie list often overflows the container. Display it fullscreen instead?
 
+
 type Route
-    = AppRoute (Maybe String) (Maybe String)
+    = AppRoute String String
 
 
 route : Parser (Route -> a) a
 route =
-    UrlParser.map AppRoute (top <?> stringParam "collection" <?> stringParam "movies")
+    UrlParser.map AppRoute (string </> string)
 
 
 main =
@@ -84,24 +86,25 @@ main =
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( (parseHash route location) |> Maybe.withDefault (AppRoute Nothing Nothing) |> modelFrom
+    ( (parseHash route location) |> Maybe.map modelFrom |> Maybe.withDefault Model.empty
     , Cmd.none
     )
 
 
 modelFrom : Route -> Model
-modelFrom (AppRoute maybeCollection maybeItems) =
+modelFrom (AppRoute collectionId itemsString) =
     Maybe.withDefault Model.empty <|
-        (Maybe.map2
-            (\collection itemsString ->
+        (Maybe.map
+            (\collection ->
                 { movies = itemsString |> gridItemsFromCommaSeparatedList collection
                 , collection = collection
                 , dragging = Nothing
                 , trayMode = Collapsed
                 }
             )
-            (Maybe.andThen Movie.fromCollectionId maybeCollection)
-            maybeItems
+            (Movie.fromCollectionId
+                collectionId
+            )
         )
 
 
