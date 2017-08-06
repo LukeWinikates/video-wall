@@ -12,7 +12,7 @@ import Dom.Dragging as Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
 import GuideLines exposing (guideLines)
-import Html exposing (Attribute, Html, a, b, body, button, div, h2, li, text, ul, video)
+import Html exposing (Attribute, Html, a, b, body, button, div, h2, li, p, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, rel, src, style)
 import Html.Events exposing (..)
 import Json.Decode exposing (Decoder)
@@ -30,14 +30,11 @@ import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
 import UrlParser exposing (..)
 import Dom.Video exposing (playbackRate, volume)
+import Poem exposing (Poem)
 
 
 -- TODO topic: sharing
 -- TODO: something for saving curated collections/switching between collections, ala codepen
--- TODO topic: showing off
--- TODO: is there something cool to do with showing the name of the collection / the videos? (maybe an overlay that fades out?)
--- TODO: when the tray is open, show a translucent overlay, slow playback speed, and
---        show the collection name and list of movie titles sorted by distance from top left
 -- TODO topic: composition
 -- TODO: when switching videos, highlight the ones that aren't already onscreen
 -- TODO: add a "randomize" button
@@ -363,6 +360,16 @@ gridMovieView model index gridItem =
                     [ videoPicker index model.collection orientation ]
 
 
+poemView : Poem -> Html Msg
+poemView poem =
+    div [ style [ ( "color", "white" ), ( "margin", ("10% 20%") ) ] ]
+        ([ Html.h2 [ style [ ( "font-size", "24px" ) ] ] [ Html.text poem.title ]
+         , Html.h3 [ style [ ( "font-size", "16px" ) ] ] [ Html.text poem.subtitle ]
+         ]
+            ++ List.map (\line -> p [ style [ ( "font-size", "18px" ) ] ] [ Html.text line ]) poem.lines
+        )
+
+
 overlayView : Model -> Html Msg
 overlayView model =
     case model.trayMode of
@@ -378,7 +385,7 @@ overlayView model =
                     , ( "width", "100vw" )
                     ]
                 ]
-                []
+                [ poemView <| Poem.poem model ]
 
         Collapsed ->
             Html.text ""
