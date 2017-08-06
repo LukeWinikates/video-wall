@@ -28,9 +28,8 @@ import Movie exposing (..)
 import Navigation exposing (..)
 import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
-
 import UrlParser exposing (..)
-import Dom.Video exposing (volume)
+import Dom.Video exposing (playbackRate, volume)
 
 
 -- TODO topic: sharing
@@ -311,6 +310,13 @@ videoTagView model index movie =
         , (onClick (ChangeItem (ShowPicker True) index))
         , (src ("/public/" ++ model.collection.id ++ "/" ++ (fileName movie)))
         , (volume 0.005)
+        , (playbackRate
+            (if model.trayMode == Expanded then
+                0.5
+             else
+                1.0
+            )
+          )
         , (style
             [ ( case movie.orientation of
                     Horizontal ->
@@ -357,6 +363,27 @@ gridMovieView model index gridItem =
                     [ videoPicker index model.collection orientation ]
 
 
+overlayView : Model -> Html Msg
+overlayView model =
+    case model.trayMode of
+        Expanded ->
+            div
+                [ style
+                    [ ( "opacity", "0.4" )
+                    , ( "position", "absolute" )
+                    , ( "top", "0" )
+                    , ( "left", "0" )
+                    , ( "background-color", "black" )
+                    , ( "height", "100vh" )
+                    , ( "width", "100vw" )
+                    ]
+                ]
+                []
+
+        Collapsed ->
+            Html.text ""
+
+
 view : Model -> Html Msg
 view model =
     body
@@ -385,6 +412,7 @@ view model =
                    )
                     |> Maybe.withDefault []
                   )
+                , [ overlayView model ]
                 , [ Tray.menuView model.trayMode ]
                 ]
             )
