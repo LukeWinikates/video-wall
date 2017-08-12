@@ -51,9 +51,7 @@ import Poem exposing (Poem)
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
 -- TODO category: user feedback
--- TODO: fold tray menu away when user clicks a collection?
 -- TODO: rotate button is confusing, because the first thing it does is make you pick a new video
--- TODO: no immediate feedback for switching collections (maybe indicate collection name change)
 -- TODO: provide preset layouts to start from?
 -- TODO: size selector for Initial state when adding a new item is confusing
 -- TODO: maybe reconsider interaction starting with clicking an arbitrary spot. Start with video selection instead, then position? The clicked position is probably just going to get adjusted later
@@ -63,6 +61,7 @@ import Poem exposing (Poem)
 -- TODO: buttons don't have pointer style
 -- TODO: links for changing the collection also don't have pointer style (is there a way to make the URL look right on the link, so ctrl+click works?)
 -- TODO: landing from a bare url should show you something cool -> maybe the tray menu is open
+
 
 type Route
     = AppRoute String String
