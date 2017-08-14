@@ -43,6 +43,7 @@ type TrayMode
 
 type TrayContent
     = ShowingPoem
+    | MoviePicker
 
 
 empty : Model

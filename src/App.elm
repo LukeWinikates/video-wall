@@ -19,7 +19,7 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, TrayContent(ShowingPoem), TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
+import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
@@ -309,7 +309,7 @@ videoTagView model index movie =
         , (src ("/public/" ++ model.collection.id ++ "/" ++ (fileName movie)))
         , (volume 0.005)
         , (playbackRate
-            (if model.trayMode == (Expanded ShowingPoem) then
+            (if model.trayMode /= Collapsed then
                 0.5
              else
                 1.0
@@ -371,10 +371,15 @@ poemView poem =
         )
 
 
+moviePickerView : Model -> Html Msg
+moviePickerView model =
+    Html.text ""
+
+
 overlayView : Model -> Html Msg
 overlayView model =
     case model.trayMode of
-        Expanded ShowingPoem ->
+        Expanded mode ->
             div
                 [ style
                     [ ( "opacity", "0.4" )
@@ -386,7 +391,13 @@ overlayView model =
                     , ( "width", "100vw" )
                     ]
                 ]
-                [ poemView <| Poem.poem model ]
+                [ case mode of
+                    ShowingPoem ->
+                        poemView <| Poem.poem model
+
+                    MoviePicker ->
+                        moviePickerView <| model
+                ]
 
         Collapsed ->
             Html.text ""
