@@ -1,9 +1,10 @@
-module Movie exposing (Movie, byOrientation, findById, fileName, fromCollectionId, collections, MovieCollection, fallbackCollection)
+module Movie exposing (Movie, byOrientation, findById, fileName, fromCollectionId, collections, MovieCollection, fallbackCollection, except)
 
 import Dict exposing (Dict)
 import Geometry exposing (..)
 import List
 import Maybe exposing (withDefault)
+import Set
 
 
 type alias Movie =
@@ -126,6 +127,15 @@ collectionsDict =
 findById : MovieCollection -> String -> Maybe Movie
 findById collection id =
     collection.movies |> List.filter (\m -> m.id == id) |> List.head
+
+
+except : MovieCollection -> List Movie -> List Movie
+except collection movies =
+    List.map .id movies
+        |> Set.fromList
+        |> (Set.diff <| (Set.fromList <| List.map .id collection.movies))
+        |> Set.toList
+        |> List.filterMap (findById collection)
 
 
 

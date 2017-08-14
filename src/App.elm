@@ -301,12 +301,17 @@ gridItemStyling item =
         )
 
 
+videoUrl : MovieCollection -> Movie -> String
+videoUrl collection movie =
+    ("/public/" ++ collection.id ++ "/" ++ (fileName movie))
+
+
 videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
         [ (loop True)
         , (onClick (ChangeItem (ShowPicker True) index))
-        , (src ("/public/" ++ model.collection.id ++ "/" ++ (fileName movie)))
+        , (src <| videoUrl model.collection movie)
         , (volume 0.005)
         , (playbackRate
             (if model.trayMode /= Collapsed then
@@ -371,9 +376,43 @@ poemView poem =
         )
 
 
+movieFromGridItem : GridItem -> Maybe Movie
+movieFromGridItem item =
+    case item.content of
+        Content _ _ m _ ->
+            Just m
+
+        _ ->
+            Nothing
+
+
 moviePickerView : Model -> Html Msg
 moviePickerView model =
-    Html.text ""
+    let
+        movies =
+            Movie.except model.collection (List.filterMap movieFromGridItem model.movies)
+
+        sizeForMovie =
+            dimension Small
+    in
+        div [ style [ ( "display", "flex" ), ( "flex-wrap", "wrap" ), ( "background-color", colors.hex.mistyRose ) ] ]
+            (List.map
+                (\m ->
+                    video
+                        [ (volume 0)
+                        , (autoplay True)
+                        , src <| videoUrl model.collection m
+                        , (style
+                            [ ( "padding", "20px" )
+                            , ( "height", sizeForMovie m.orientation |> .height |> px )
+                            , ( "width", sizeForMovie m.orientation |> .width |> px )
+                            ]
+                          )
+                        ]
+                        []
+                )
+                movies
+            )
 
 
 overlayView : Model -> Html Msg
