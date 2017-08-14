@@ -1,12 +1,12 @@
 module App exposing (..)
 
 import App.Buttons exposing (changeButton, dragButton, movieButton)
-import App.Colors exposing (colors)
+import App.Colors exposing (colors, toCssColorString, transparentize)
 import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
 import App.SizePicker exposing (sizePickerView)
 import App.Tray as Tray
-import Color
+import Color exposing (Color)
 import Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Dom.Dragging as Dragging exposing (..)
 import FontAwesome
@@ -395,15 +395,17 @@ moviePickerView model =
         sizeForMovie =
             dimension Small
     in
-        div [ style [ ( "display", "flex" ), ( "flex-wrap", "wrap" ), ( "background-color", colors.hex.mistyRose ) ] ]
+        div [ style [ ( "background-color", colors.hex.mistyRose ) ] ]
             (List.map
                 (\m ->
                     video
                         [ (volume 0)
                         , (autoplay True)
+                        , (loop True)
                         , src <| videoUrl model.collection m
                         , (style
                             [ ( "padding", "20px" )
+                            , ( "margin", "20px" )
                             , ( "height", sizeForMovie m.orientation |> .height |> px )
                             , ( "width", sizeForMovie m.orientation |> .width |> px )
                             ]
@@ -421,11 +423,10 @@ overlayView model =
         Expanded mode ->
             div
                 [ style
-                    [ ( "opacity", "0.4" )
-                    , ( "position", "absolute" )
+                    [ ( "position", "absolute" )
                     , ( "top", "0" )
                     , ( "left", "0" )
-                    , ( "background-color", "black" )
+                    , ( "background-color", colors.color.thunder |> transparentize 0.9 |> toCssColorString )
                     , ( "height", "100vh" )
                     , ( "width", "100vw" )
                     ]

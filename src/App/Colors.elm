@@ -1,6 +1,6 @@
-module App.Colors exposing (colors)
+module App.Colors exposing (colors, transparentize, toCssColorString)
 
-import Color
+import Color exposing (Color)
 
 
 colors =
@@ -17,3 +17,13 @@ colors =
         , mistyRose = Color.rgb 245 227 224
         }
     }
+
+
+transparentize : Float -> Color -> Color
+transparentize alpha color =
+    Color.toRgb color |> \c -> { c | alpha = alpha } |> \c -> Color.rgba c.red c.green c.blue c.alpha
+
+
+toCssColorString : Color -> String
+toCssColorString color =
+    color |> Color.toRgb |> \c -> "rgba(" ++ (c.red |> toString) ++ "," ++ (c.blue |> toString) ++ "," ++ (c.green |> toString) ++ ", " ++ (c.alpha |> toString) ++ ")"
