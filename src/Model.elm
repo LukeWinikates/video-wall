@@ -37,8 +37,12 @@ type alias Model =
 
 
 type TrayMode
-    = Expanded
+    = Expanded TrayContent
     | Collapsed
+
+
+type TrayContent
+    = ShowingPoem
 
 
 empty : Model

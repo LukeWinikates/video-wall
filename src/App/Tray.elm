@@ -6,9 +6,9 @@ import App.Grid exposing (px)
 import App.Msg exposing (Msg(ChangeCollection, TrayMenu))
 import FontAwesome
 import Html exposing (Html, a, div, h2)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
-import Model exposing (TrayMode(Collapsed, Expanded))
+import Model exposing (TrayContent(ShowingPoem), TrayMode(Collapsed, Expanded))
 import Movie exposing (MovieCollection)
 
 
@@ -27,9 +27,9 @@ menuView mode =
         Collapsed ->
             div
                 [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
-                [ changeButton (TrayMenu Expanded) (FontAwesome.toggle_left colors.color.thunder 16) ]
+                [ changeButton (TrayMenu (Expanded ShowingPoem)) (FontAwesome.toggle_left colors.color.thunder 16) ]
 
-        Expanded ->
+        Expanded _ ->
             div
                 [ style
                     [ ( "position", "absolute" )

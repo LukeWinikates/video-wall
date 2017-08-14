@@ -12,14 +12,14 @@ import Dom.Dragging as Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
 import GuideLines exposing (guideLines)
-import Html exposing (Attribute, Html, a, b, body, button, div, h2, li, p, text, ul, video)
+import Html exposing (Attribute, Html, a, b, body, div, h2, li, p, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, rel, src, style)
 import Html.Events exposing (..)
 import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
+import Model exposing (GridContent(..), GridItem, Model, TrayContent(ShowingPoem), TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
@@ -309,7 +309,7 @@ videoTagView model index movie =
         , (src ("/public/" ++ model.collection.id ++ "/" ++ (fileName movie)))
         , (volume 0.005)
         , (playbackRate
-            (if model.trayMode == Expanded then
+            (if model.trayMode == (Expanded ShowingPoem) then
                 0.5
              else
                 1.0
@@ -374,7 +374,7 @@ poemView poem =
 overlayView : Model -> Html Msg
 overlayView model =
     case model.trayMode of
-        Expanded ->
+        Expanded ShowingPoem ->
             div
                 [ style
                     [ ( "opacity", "0.4" )
