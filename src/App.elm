@@ -395,12 +395,18 @@ moviePickerView model =
         sizeForMovie =
             dimension Small
     in
-        div [ style [ ( "background-color", colors.hex.mistyRose ) ] ]
+        div
+            [ style
+                [ ( "background-color", colors.hex.mistyRose )
+                , ( "overflow-y", "scroll" )
+                , ( "width", "calc(100vw - 400px)" )
+                , ( "height", "100%" )
+                ]
+            ]
             (List.map
                 (\m ->
                     video
                         [ (volume 0)
-                        , (autoplay True)
                         , (loop True)
                         , src <| videoUrl model.collection m
                         , (style
