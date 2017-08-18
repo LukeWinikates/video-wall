@@ -24,18 +24,12 @@ toggleVideoPicker bool gridItem =
         Content o s m ms ->
             { gridItem | content = Content o s m { ms | videoPicker = bool } }
 
-        _ ->
-            gridItem
-
 
 toggleHoverMenu : Bool -> GridItem -> GridItem
 toggleHoverMenu bool gridItem =
     case gridItem.content of
         Content o s m ms ->
             { gridItem | content = Content o s m { ms | hoverMenu = bool } }
-
-        _ ->
-            gridItem
 
 
 rotate : Orientation -> GridItem -> GridItem
@@ -44,13 +38,12 @@ rotate oldOrientation gridItem =
         Content o s m ms ->
             { gridItem
                 | content =
-                    Picking
+                    Content
                         (Geometry.flipOrientation oldOrientation)
                         s
+                        m
+                        ms
             }
-
-        _ ->
-            gridItem
 
 
 applyAll : (GridItem -> GridItem) -> Model -> Model
@@ -110,21 +103,12 @@ setMovie newMovie gridItem =
         Content o s m ms ->
             { gridItem | content = Content o s newMovie ms }
 
-        Picking o s ->
-            { gridItem | content = Content o s newMovie defaultMenuState }
-
-        _ ->
-            gridItem
-
 
 resizeItem : Scale -> GridItem -> GridItem
 resizeItem scale gridItem =
     case gridItem.content of
         Content o s m ms ->
             { gridItem | content = Content o scale m ms }
-
-        _ ->
-            gridItem
 
 
 resize : Scale -> Int -> Model -> Model

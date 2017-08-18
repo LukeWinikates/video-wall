@@ -14,7 +14,7 @@ poem : Model -> Poem
 poem model =
     { title = model.collection.title
     , subtitle = model.collection.dates
-    , lines = model.movies |> sortByDistanceFromOrigin |> List.filterMap title
+    , lines = model.movies |> sortByDistanceFromOrigin |> List.map title
     }
 
 
@@ -23,11 +23,8 @@ sortByDistanceFromOrigin =
     List.sortBy (\i -> (sqrt ((toFloat i.top) ^ 2) + ((toFloat i.left) ^ 2)))
 
 
-title : GridItem -> Maybe String
+title : GridItem -> String
 title gridItem =
     case gridItem.content of
         Content _ _ movie _ ->
-            Just movie.description
-
-        _ ->
-            Nothing
+            movie.description

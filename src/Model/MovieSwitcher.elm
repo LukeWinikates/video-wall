@@ -1,7 +1,7 @@
 module Model.MovieSwitcher exposing (replaceMovies)
 
 import Geometry exposing (Orientation(Horizontal, Vertical))
-import Model exposing (GridContent(Content, Initial, Picking), GridItem)
+import Model exposing (GridContent(Content), GridItem)
 import Movie exposing (Movie, MovieCollection)
 import List.Extra exposing (andMap)
 import List exposing (map)
@@ -18,35 +18,27 @@ replaceMovies gridItems collection =
             Movie.byOrientation collection Horizontal
 
         remaining =
-            List.filterMap orientationFrom gridItems
+            List.map orientationFrom gridItems
     in
         pickSubstitutableMovies { horizontals = horizontals, verticals = verticals, remaining = remaining, populated = [] }
             |> injectMoviesInto gridItems
 
 
-orientationFrom : GridItem -> Maybe Orientation
+orientationFrom : GridItem -> Orientation
 orientationFrom gridItem =
     case gridItem.content of
         Content o _ _ _ ->
-            Just o
-
-        _ ->
-            Nothing
+            o
 
 
-swapOrUnsetMovieContent : GridItem -> Maybe Movie -> GridItem
-swapOrUnsetMovieContent item maybeMovie =
-    case maybeMovie of
-        Just movie ->
-            Model.Mutate.setMovie movie item
-
-        Nothing ->
-            Model.Mutate.content (Initial Nothing) item
+swapOrUnsetMovieContent : GridItem -> Movie -> GridItem
+swapOrUnsetMovieContent item movie =
+    Model.Mutate.setMovie movie item
 
 
 injectMoviesInto : List GridItem -> List (Maybe Movie) -> List GridItem
 injectMoviesInto gridItems maybeMovies =
-    List.Extra.andMap maybeMovies (List.map swapOrUnsetMovieContent gridItems)
+    List.Extra.andMap (List.filterMap identity maybeMovies) (List.map swapOrUnsetMovieContent gridItems)
 
 
 type alias MovieSubstitutionState =

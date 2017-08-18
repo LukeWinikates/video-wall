@@ -4,7 +4,7 @@ import Geometry exposing (Orientation(Horizontal, Vertical), Scale(Large, Medium
 import Model exposing (GridContent(Content), GridItem, Model)
 
 
-frameToString : GridItem -> Maybe String
+frameToString : GridItem -> String
 frameToString { content, top, left } =
     case content of
         Content orientation scale movie _ ->
@@ -30,15 +30,11 @@ frameToString { content, top, left } =
             , movie.id
             ]
                 |> String.join "-"
-                |> Just
-
-        _ ->
-            Nothing
 
 
 framesUrlString : List GridItem -> String
 framesUrlString frames =
-    frames |> List.filterMap frameToString |> String.join ","
+    frames |> List.map frameToString |> String.join ","
 
 
 toUrl : Model -> String

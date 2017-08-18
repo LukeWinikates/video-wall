@@ -4,7 +4,6 @@ import App.Buttons exposing (changeButton, dragButton, movieButton)
 import App.Colors exposing (colors, toCssColorString, transparentize)
 import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
-import App.SizePicker exposing (sizePickerView)
 import App.Tray as Tray
 import Color exposing (Color)
 import Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
@@ -42,8 +41,6 @@ import Poem exposing (Poem)
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
 -- TODO topic: the item adding workflow
--- TODO: some kind of affordance indicating that clicking on the grid lets you add a movie
--- TODO: movie picker isn't that nice, and can't be closed
 -- TODO: the different states for the process of adding an item feel disjointed
 -- TODO topic: tray menu
 -- TODO: store last interaction time when a mutation happens
@@ -53,8 +50,6 @@ import Poem exposing (Poem)
 -- TODO category: user feedback
 -- TODO: rotate button is confusing, because the first thing it does is make you pick a new video
 -- TODO: provide preset layouts to start from?
--- TODO: size selector for Initial state when adding a new item is confusing
--- TODO: maybe reconsider interaction starting with clicking an arbitrary spot. Start with video selection instead, then position? The clicked position is probably just going to get adjusted later
 -- TODO: an extra option that includes videos from all the collections
 -- TODO: something that boosts z-index of last thing you touched, so that it stays on top
 -- TODO: movie list often overflows the container. Display it fullscreen instead?
@@ -244,42 +239,25 @@ helperViews collection content index =
                     )
             )
 
-        Picking orientation scale ->
-            [ videoPicker index collection orientation ]
-
-        _ ->
-            []
-
 
 dimensionsForContent : GridContent -> Dimension
 dimensionsForContent content =
     let
         ( orientation, scale ) =
             case content of
-                Picking orientation scale ->
-                    ( orientation, scale )
-
                 Content orientation scale _ _ ->
                     ( orientation, scale )
-
-                _ ->
-                    ( Vertical, Medium )
     in
         dimension scale orientation
 
 
 zIndexForContent : GridContent -> String
-zIndexForContent content =
+zIndexForContent (Content _ _ _ menus) =
     toString <|
-        case content of
-            Content _ _ _ menus ->
-                if menus.hoverMenu then
-                    20
-                else
-                    0
-
-            _ ->
-                0
+        if menus.hoverMenu then
+            20
+        else
+            0
 
 
 gridItemStyling : GridItem -> Attribute Msg
@@ -356,15 +334,6 @@ gridMovieView model index gridItem =
                         ++ (helperViews model.collection gridItem.content index)
                     )
 
-            Initial preview ->
-                sizePickerView gridItem preview index
-
-            Picking orientation scale ->
-                div
-                    [ styles
-                    ]
-                    [ videoPicker index model.collection orientation ]
-
 
 poemView : Poem -> Html Msg
 poemView poem =
@@ -376,21 +345,18 @@ poemView poem =
         )
 
 
-movieFromGridItem : GridItem -> Maybe Movie
+movieFromGridItem : GridItem -> Movie
 movieFromGridItem item =
     case item.content of
         Content _ _ m _ ->
-            Just m
-
-        _ ->
-            Nothing
+            m
 
 
 moviePickerView : Model -> Html Msg
 moviePickerView model =
     let
         movies =
-            Movie.except model.collection (List.filterMap movieFromGridItem model.movies)
+            Movie.except model.collection (List.map movieFromGridItem model.movies)
 
         sizeForMovie =
             dimension Small

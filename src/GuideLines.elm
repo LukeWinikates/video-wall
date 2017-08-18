@@ -67,20 +67,17 @@ leftCenterRight item =
         [ left, left + (width // 2), left + width ]
 
 
-dimensionable : GridItem -> Maybe Dimensionable
+dimensionable : GridItem -> Dimensionable
 dimensionable item =
     case item.content of
         Content orientation scale _ _ ->
-            Just { left = item.left, top = item.top, scale = scale, orientation = orientation }
-
-        _ ->
-            Nothing
+            { left = item.left, top = item.top, scale = scale, orientation = orientation }
 
 
 getHorizontals : Model -> List Int
 getHorizontals model =
     model.movies
-        |> List.filterMap dimensionable
+        |> List.map dimensionable
         |> List.map topCenterBottom
         |> List.concat
         |> Set.fromList
@@ -90,7 +87,7 @@ getHorizontals model =
 getVerticals : Model -> List Int
 getVerticals model =
     model.movies
-        |> List.filterMap dimensionable
+        |> List.map dimensionable
         |> List.map leftCenterRight
         |> List.concat
         |> Set.fromList

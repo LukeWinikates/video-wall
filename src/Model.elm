@@ -23,9 +23,7 @@ type alias MenuState =
 
 
 type GridContent
-    = Initial (Maybe ( Orientation, Scale ))
-    | Picking Orientation Scale
-    | Content Orientation Scale Movie MenuState
+    = Content Orientation Scale Movie MenuState
 
 
 type alias Model =
@@ -55,25 +53,21 @@ empty =
     }
 
 
-hydrate : MovieCollection -> ItemDescription -> GridItem
+hydrate : MovieCollection -> ItemDescription -> Maybe GridItem
 hydrate collection definition =
-    { top = definition.top
-    , left = definition.left
-    , content =
-        (Movie.findById
-            collection
-            definition.movieId
-        )
-            |> Maybe.map
-                (\m ->
+    Movie.findById collection definition.movieId
+        |> Maybe.map
+            (\movie ->
+                { top = definition.top
+                , left = definition.left
+                , content =
                     Content
                         definition.orientation
                         definition.scale
-                        m
+                        movie
                         defaultMenuState
-                )
-            |> Maybe.withDefault (Picking definition.orientation definition.scale)
-    }
+                }
+            )
 
 
 defaultMenuState : MenuState
@@ -85,4 +79,4 @@ defaultMenuState =
 
 gridItemsFromCommaSeparatedList : MovieCollection -> String -> List GridItem
 gridItemsFromCommaSeparatedList collection movieId =
-    movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.map (hydrate collection)
+    movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.filterMap (hydrate collection)
