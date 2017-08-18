@@ -144,11 +144,11 @@ update action model =
             TrayMenu mode ->
                 ( { model | trayMode = mode }, Cmd.none )
 
-            ChangeCollection collectionName ->
+            ChangeCollection collection ->
                 wrap
                     ({ model
-                        | movies = Model.MovieSwitcher.replaceMovies model.movies collectionName
-                        , collection = collectionName
+                        | movies = Model.MovieSwitcher.replaceMovies model.movies collection
+                        , collection = collection
                      }
                     )
 
