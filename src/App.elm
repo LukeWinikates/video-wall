@@ -21,7 +21,7 @@ import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
 import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, newItem, remove, resize, setMovie, toggleVideoPicker)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
 import Mouse exposing (Position)
 import Movie exposing (..)
@@ -143,8 +143,8 @@ update action model =
                     )
                     |> wrapDrag typ
 
-            NewMovie position ->
-                wrap (newItem position model)
+            NewMovie movie position ->
+                wrap <| hideTray <| (newItem movie position model)
 
             TrayMenu mode ->
                 ( { model | trayMode = mode }, Cmd.none )
@@ -408,6 +408,7 @@ moviePickerView model =
                     video
                         [ (volume 0)
                         , (loop True)
+                        , (onClick (NewMovie m { x = 200, y = 200 }))
                         , src <| videoUrl model.collection m
                         , (style
                             [ ( "padding", "20px" )
@@ -456,7 +457,6 @@ view model =
         [ Html.node "link" [ href "https://fonts.googleapis.com/css?family=Lato", rel "stylesheet" ] []
         , div
             [ Html.Attributes.id "background"
-            , (onClickElementWithId "background" decodePosition NewMovie)
             , (style
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )

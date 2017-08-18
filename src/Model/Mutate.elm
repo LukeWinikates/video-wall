@@ -145,14 +145,19 @@ drag maybeDrag model =
     { model | dragging = maybeDrag }
 
 
-newItem : Position -> Model -> Model
-newItem position model =
+hideTray : Model -> Model
+hideTray model =
+    { model | trayMode = Collapsed }
+
+
+newItem : Movie -> Position -> Model -> Model
+newItem movie position model =
     { model
         | movies =
             model.movies
                 ++ [ { top = position.y
                      , left = position.x
-                     , content = Initial Nothing
+                     , content = Content movie.orientation Medium movie defaultMenuState
                      }
                    ]
     }
