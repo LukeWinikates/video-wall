@@ -11,8 +11,8 @@ import Dom.Dragging as Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
 import GuideLines exposing (guideLines)
-import Html exposing (Attribute, Html, a, b, body, div, h2, li, p, text, ul, video)
-import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, rel, src, style)
+import Html exposing (Attribute, Html, a, b, body, div, h2, img, li, p, text, ul, video)
+import Html.Attributes exposing (attribute, autoplay, height, href, loop, poster, property, rel, src, style)
 import Html.Events exposing (..)
 import Json.Decode exposing (Decoder)
 import Json.Encode
@@ -63,7 +63,6 @@ import Poem exposing (Poem)
 -- TODO: click on background of modal overlay to dismiss overlay/menu?
 -- TODO: tray menu button can be obscured by movies
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
-
 
 
 type Route
@@ -292,6 +291,11 @@ videoUrl collection movie =
     ("/public/" ++ collection.id ++ "/" ++ (fileName movie))
 
 
+videoThumbNailUrl : MovieCollection -> Movie -> String
+videoThumbNailUrl collection movie =
+    videoUrl collection movie |> ((flip (++)) ".png")
+
+
 videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
@@ -379,11 +383,9 @@ moviePickerView model =
             ]
             (List.map
                 (\m ->
-                    video
-                        [ (volume 0)
-                        , (loop True)
+                    img
+                        [ (src <| videoThumbNailUrl model.collection m)
                         , (onClick (NewMovie m { x = 200, y = 200 }))
-                        , src <| videoUrl model.collection m
                         , (style
                             [ ( "padding", "20px" )
                             , ( "margin", "20px" )
