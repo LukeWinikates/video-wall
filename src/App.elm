@@ -65,6 +65,8 @@ import Poem exposing (Poem)
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
 -- TODO category: general niceness
 -- TODO: refactor out a global rule for setting box-sizing: border-box
+-- TODO: it's a little slow to load the videos when serving from GCP - what are some good options? (compression? cdn?)
+
 
 type Route
     = AppRoute String String
@@ -303,6 +305,7 @@ videoTagView model index movie =
         [ (loop True)
         , (onClick (ChangeItem (ShowPicker True) index))
         , (src <| videoUrl model.collection movie)
+        , (poster <| videoThumbNailUrl model.collection movie)
         , (volume 0.005)
         , (playbackRate
             (if model.trayMode /= Collapsed then
