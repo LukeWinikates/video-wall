@@ -56,6 +56,14 @@ import Poem exposing (Poem)
 -- TODO: buttons don't have pointer style
 -- TODO: links for changing the collection also don't have pointer style (is there a way to make the URL look right on the link, so ctrl+click works?)
 -- TODO: landing from a bare url should show you something cool -> maybe the tray menu is open
+-- TODO category: user feedback 2
+-- TODO: positive feedback about rotate button keeping the active movie - how to use this?
+-- TODO: when in movie picker mode, need a cancel button (maybe Esc works too?)
+-- TODO: clock on background to dismiss all menus?
+-- TODO: click on background of modal overlay to dismiss overlay/menu?
+-- TODO: tray menu button can be obscured by movies
+-- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
+
 
 
 type Route
