@@ -63,7 +63,8 @@ import Poem exposing (Poem)
 -- TODO: click on background of modal overlay to dismiss overlay/menu?
 -- TODO: tray menu button can be obscured by movies
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
-
+-- TODO category: general niceness
+-- TODO: refactor out a global rule for setting box-sizing: border-box
 
 type Route
     = AppRoute String String
@@ -386,11 +387,22 @@ moviePickerView model =
                     img
                         [ (src <| videoThumbNailUrl model.collection m)
                         , (onClick (NewMovie m { x = 200, y = 200 }))
+                        , (onMouseEnter (TrayMenu (Expanded (MoviePicker { highlighted = Just m }))))
+                        , (onMouseLeave (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))))
                         , (style
                             [ ( "padding", "20px" )
                             , ( "margin", "20px" )
                             , ( "height", sizeForMovie m.orientation |> .height |> px )
                             , ( "width", sizeForMovie m.orientation |> .width |> px )
+                            , ( "box-sizing", "border-box" )
+                            , ( "cursor", "pointer" )
+                            , ( "border"
+                              , (if model.trayMode == (Expanded (MoviePicker ({ highlighted = Just m }))) then
+                                    "2px solid " ++ colors.hex.thunder
+                                 else
+                                    "none"
+                                )
+                              )
                             ]
                           )
                         ]
@@ -418,7 +430,7 @@ overlayView model =
                     ShowingPoem ->
                         poemView <| Poem.poem model
 
-                    MoviePicker ->
+                    MoviePicker _ ->
                         moviePickerView <| model
                 ]
 

@@ -40,6 +40,7 @@ menuView mode =
                     , ( "width", "400px" )
                     , ( "background-color", colors.hex.mistyRose )
                     , ( "border-left", "2px solid " ++ colors.hex.thunder )
+                    , ( "box-sizing", "border-box" )
                     ]
                 ]
                 ([ changeButton (TrayMenu Collapsed) (FontAwesome.toggle_right colors.color.thunder 16)
@@ -47,6 +48,6 @@ menuView mode =
                  ]
                     ++ (List.map collectionSwitchLink Movie.collections)
                     ++ [ h2 [] [ Html.text "Videos" ]
-                       , a [ onClick (TrayMenu (Expanded MoviePicker)) ] [ Html.text "Add +" ]
+                       , a [ onClick (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))) ] [ Html.text "Add +" ]
                        ]
                 )

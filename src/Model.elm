@@ -39,9 +39,13 @@ type TrayMode
     | Collapsed
 
 
+type alias PickerState =
+    { highlighted : Maybe Movie }
+
+
 type TrayContent
     = ShowingPoem
-    | MoviePicker
+    | MoviePicker PickerState
 
 
 empty : Model
