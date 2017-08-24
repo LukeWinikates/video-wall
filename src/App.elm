@@ -53,7 +53,6 @@ import Poem exposing (Poem)
 -- TODO: an extra option that includes videos from all the collections
 -- TODO: something that boosts z-index of last thing you touched, so that it stays on top
 -- TODO: movie list often overflows the container. Display it fullscreen instead?
--- TODO: buttons don't have pointer style
 -- TODO: links for changing the collection also don't have pointer style (is there a way to make the URL look right on the link, so ctrl+click works?)
 -- TODO: landing from a bare url should show you something cool -> maybe the tray menu is open
 -- TODO category: user feedback 2

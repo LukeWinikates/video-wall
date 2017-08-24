@@ -25,6 +25,7 @@ movieButton attributes content =
                     , ( "font-weight", "bold" )
                     , ( "height", "24px" )
                     , ( "border", "none" )
+                    , ( "cursor", "pointer" )
                     , ( "margin", "5px" )
                     , ( "padding", "5px 10px" )
                     ]
