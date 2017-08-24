@@ -88,9 +88,10 @@ main =
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( (parseHash route location) |> Maybe.map modelFrom |> Maybe.withDefault Model.empty
-    , Cmd.none
-    )
+    (parseHash route location)
+        |> Maybe.map modelFrom
+        |> Maybe.map (flip (,) Cmd.none)
+        |> Maybe.withDefault ( Model.default, Model.default |> modelToUrlCmd )
 
 
 modelFrom : Route -> Model
@@ -115,11 +116,16 @@ subscriptions model =
     Dragging.subs model.dragging DragMovie
 
 
+modelToUrlCmd : Model -> Cmd Msg
+modelToUrlCmd model =
+    model |> toUrl |> Navigation.modifyUrl
+
+
 wrapDrag : DragEventType -> Model -> ( Model, Cmd Msg )
 wrapDrag typ model =
     case typ of
         End ->
-            ( model, model |> toUrl |> Navigation.modifyUrl )
+            ( model, model |> modelToUrlCmd )
 
         _ ->
             ( model, Cmd.none )
@@ -129,7 +135,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
         wrap model =
-            ( model, model |> toUrl |> Navigation.modifyUrl )
+            ( model, model |> modelToUrlCmd )
     in
         case action of
             ChangeItem mutation index ->
