@@ -20,7 +20,7 @@ import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
 import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
 import Mouse exposing (Position)
 import Movie exposing (..)
@@ -59,7 +59,6 @@ import Poem exposing (Poem)
 -- TODO category: user feedback 2
 -- TODO: positive feedback about rotate button keeping the active movie - how to use this?
 -- TODO: when in movie picker mode, need a cancel button (maybe Esc works too?)
--- TODO: clock on background to dismiss all menus?
 -- TODO: click on background of modal overlay to dismiss overlay/menu?
 -- TODO: tray menu button can be obscured by movies
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
@@ -167,6 +166,9 @@ update action model =
                         , collection = collection
                      }
                     )
+
+            DismissMenus ->
+                wrap (applyAll clearMenus model)
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -454,6 +456,7 @@ view model =
         [ Html.node "link" [ href "https://fonts.googleapis.com/css?family=Lato", rel "stylesheet" ] []
         , div
             [ Html.Attributes.id "background"
+            , (onClickElementWithId "background" (Json.Decode.succeed DismissMenus) identity)
             , (style
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )

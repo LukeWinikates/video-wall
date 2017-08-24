@@ -32,6 +32,13 @@ toggleHoverMenu bool gridItem =
             { gridItem | content = Content o s m { ms | hoverMenu = bool } }
 
 
+clearMenus : GridItem -> GridItem
+clearMenus gridItem =
+    case gridItem.content of
+        Content o s m ms ->
+            { gridItem | content = Content o s m { ms | videoPicker = False, hoverMenu = False } }
+
+
 rotate : Orientation -> GridItem -> GridItem
 rotate oldOrientation gridItem =
     case gridItem.content of

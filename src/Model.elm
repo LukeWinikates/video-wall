@@ -56,6 +56,7 @@ empty =
     , trayMode = Collapsed
     }
 
+
 default : Model
 default =
     let
@@ -76,6 +77,7 @@ default =
                     |> String.join ","
                     |> gridItemsFromCommaSeparatedList collection
         }
+
 
 hydrate : MovieCollection -> ItemDescription -> Maybe GridItem
 hydrate collection definition =

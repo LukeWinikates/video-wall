@@ -16,3 +16,4 @@ type Msg
     | Remove Int
     | TrayMenu TrayMode
     | ChangeCollection MovieCollection
+    | DismissMenus
