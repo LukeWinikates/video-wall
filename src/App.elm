@@ -18,7 +18,7 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), gridItemsFromCommaSeparatedList)
+import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), empty, gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Model.Serialize exposing (toUrl)
@@ -30,6 +30,7 @@ import Time exposing (Time)
 import UrlParser exposing (..)
 import Dom.Video exposing (playbackRate, volume)
 import Poem exposing (Poem)
+import Task
 
 
 -- TODO topic: sharing
@@ -43,7 +44,6 @@ import Poem exposing (Poem)
 -- TODO topic: the item adding workflow
 -- TODO: the different states for the process of adding an item feel disjointed
 -- TODO topic: tray menu
--- TODO: store last interaction time when a mutation happens
 -- TODO: hide tray menu icon when user hasn't interacted for a while
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
@@ -97,10 +97,9 @@ modelFrom (AppRoute collectionId itemsString) =
     Maybe.withDefault Model.empty <|
         (Maybe.map
             (\collection ->
-                { movies = itemsString |> gridItemsFromCommaSeparatedList collection
-                , collection = collection
-                , dragging = Nothing
-                , trayMode = Collapsed
+                { empty
+                    | movies = itemsString |> gridItemsFromCommaSeparatedList collection
+                    , collection = collection
                 }
             )
             (Movie.fromCollectionId
@@ -133,7 +132,12 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     let
         wrap model =
-            ( model, model |> modelToUrlCmd )
+            ( model
+            , model
+                |> modelToUrlCmd
+                |> ((flip (::)) [ Task.perform TrackUserInteraction Time.now ])
+                |> Cmd.batch
+            )
     in
         case action of
             ChangeItem mutation index ->
@@ -168,6 +172,9 @@ update action model =
 
             DismissMenus ->
                 wrap (applyAll clearMenus model)
+
+            TrackUserInteraction time ->
+                ( { model | lastInteractionTime = time }, Cmd.none )
 
             UrlChange location ->
                 ( model, Cmd.none )

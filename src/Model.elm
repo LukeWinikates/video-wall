@@ -7,6 +7,7 @@ import Geometry exposing (..)
 import Mouse
 import Model.Parser exposing (ItemDescription)
 import Primitives exposing (resultToMaybe)
+import Time exposing (Time)
 
 
 type alias GridItem =
@@ -31,6 +32,7 @@ type alias Model =
     , collection : MovieCollection
     , dragging : Maybe (Dragging.Drag Int)
     , trayMode : TrayMode
+    , lastInteractionTime : Time
     }
 
 
@@ -54,6 +56,7 @@ empty =
     , collection = Movie.fallbackCollection
     , dragging = Nothing
     , trayMode = Collapsed
+    , lastInteractionTime = 0
     }
 
 

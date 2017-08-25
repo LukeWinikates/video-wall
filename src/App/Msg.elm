@@ -6,6 +6,7 @@ import Model.Mutate exposing (Mutation)
 import Mouse exposing (Position)
 import Movie exposing (Movie, MovieCollection)
 import Navigation
+import Time exposing (Time)
 
 
 type Msg
@@ -17,3 +18,4 @@ type Msg
     | TrayMenu TrayMode
     | ChangeCollection MovieCollection
     | DismissMenus
+    | TrackUserInteraction Time
