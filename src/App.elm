@@ -29,6 +29,7 @@ import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
 import UrlParser exposing (..)
 import Dom.Video exposing (playbackRate, volume)
+import Dom.ZIndexes as ZIndexes
 import Poem exposing (Poem)
 import Task
 
@@ -284,9 +285,9 @@ zIndexForContent : GridContent -> String
 zIndexForContent (Content _ _ _ menus) =
     toString <|
         if menus.hoverMenu then
-            20
+            ZIndexes.activeGridContent
         else
-            0
+            ZIndexes.bottommost
 
 
 gridItemStyling : GridItem -> Attribute Msg
