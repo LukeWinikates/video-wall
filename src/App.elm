@@ -57,7 +57,6 @@ import Task
 -- TODO category: user feedback 2
 -- TODO: positive feedback about rotate button keeping the active movie - how to use this?
 -- TODO: when in movie picker mode, need a cancel button (maybe Esc works too?)
--- TODO: click on background of modal overlay to dismiss overlay/menu?
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
 -- TODO category: general niceness
 -- TODO: refactor out a global rule for setting box-sizing: border-box
@@ -440,7 +439,8 @@ overlayView model =
     case model.trayMode of
         Expanded mode ->
             div
-                [ style
+                [ onClick (TrayMenu Collapsed)
+                , style
                     [ ( "position", "absolute" )
                     , ( "top", "0" )
                     , ( "left", "0" )
