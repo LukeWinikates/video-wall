@@ -57,12 +57,12 @@ import Task
 -- TODO: positive feedback about rotate button keeping the active movie - how to use this?
 -- TODO: when in movie picker mode, need a cancel button (maybe Esc works too?)
 -- TODO: click on background of modal overlay to dismiss overlay/menu?
--- TODO: tray menu button can be obscured by movies
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
 -- TODO category: general niceness
 -- TODO: refactor out a global rule for setting box-sizing: border-box
 -- TODO: it's a little slow to load the videos when serving from GCP - what are some good options? (compression? cdn?)
 -- TODO: unify tick-related events
+
 
 type Route
     = AppRoute String String
@@ -104,6 +104,7 @@ modelFrom (AppRoute collectionId itemsString) =
                 collectionId
             )
         )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

@@ -10,6 +10,7 @@ import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
 import Model exposing (Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded))
 import Movie exposing (MovieCollection)
+import Dom.ZIndexes as ZIndexes
 
 
 collectionSwitchLink : MovieCollection -> Html Msg
@@ -31,7 +32,13 @@ menuView model =
     case model.trayMode of
         Collapsed ->
             div
-                [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
+                [ style
+                    [ ( "position", "absolute" )
+                    , ( "top", 20 |> px )
+                    , ( "right", 20 |> px )
+                    , ( "z-index", ZIndexes.topmost |> toString )
+                    ]
+                ]
                 [ if Model.userHasInteractedRecently model then
                     changeButton (TrayMenu (Expanded ShowingPoem)) (FontAwesome.toggle_left colors.color.thunder 16)
                   else
