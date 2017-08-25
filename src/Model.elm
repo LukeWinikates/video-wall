@@ -33,6 +33,7 @@ type alias Model =
     , dragging : Maybe (Dragging.Drag Int)
     , trayMode : TrayMode
     , lastInteractionTime : Time
+    , lastTick : Time
     }
 
 
@@ -57,7 +58,14 @@ empty =
     , dragging = Nothing
     , trayMode = Collapsed
     , lastInteractionTime = 0
+    , lastTick = 0
     }
+
+
+userHasInteractedRecently : Model -> Bool
+userHasInteractedRecently model =
+    model.lastInteractionTime
+        > (model.lastTick - 1500)
 
 
 default : Model

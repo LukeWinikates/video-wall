@@ -43,8 +43,6 @@ import Task
 -- TODO: when being dragged, the dragged item should have the highest z-index.
 -- TODO topic: the item adding workflow
 -- TODO: the different states for the process of adding an item feel disjointed
--- TODO topic: tray menu
--- TODO: hide tray menu icon when user hasn't interacted for a while
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
 -- TODO category: user feedback
@@ -64,7 +62,7 @@ import Task
 -- TODO category: general niceness
 -- TODO: refactor out a global rule for setting box-sizing: border-box
 -- TODO: it's a little slow to load the videos when serving from GCP - what are some good options? (compression? cdn?)
-
+-- TODO: unify tick-related events
 
 type Route
     = AppRoute String String
@@ -107,10 +105,13 @@ modelFrom (AppRoute collectionId itemsString) =
             )
         )
 
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Dragging.subs model.dragging DragMovie
+    [ (Dragging.subs model.dragging DragMovie) ]
+        |> consIf
+            (Model.userHasInteractedRecently model)
+            (Time.every Time.second Tick)
+        |> Sub.batch
 
 
 modelToUrlCmd : Model -> Cmd Msg
@@ -174,7 +175,10 @@ update action model =
                 wrap (applyAll clearMenus model)
 
             TrackUserInteraction time ->
-                ( { model | lastInteractionTime = time }, Cmd.none )
+                ( { model | lastInteractionTime = time, lastTick = time }, Cmd.none )
+
+            Tick time ->
+                ( { model | lastTick = time }, Cmd.none )
 
             UrlChange location ->
                 ( model, Cmd.none )
@@ -484,7 +488,7 @@ view model =
                     |> Maybe.withDefault []
                   )
                 , [ overlayView model ]
-                , [ Tray.menuView model.trayMode ]
+                , [ Tray.menuView model ]
                 ]
             )
         ]

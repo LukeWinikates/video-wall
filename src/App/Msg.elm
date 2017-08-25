@@ -19,3 +19,4 @@ type Msg
     | ChangeCollection MovieCollection
     | DismissMenus
     | TrackUserInteraction Time
+    | Tick Time

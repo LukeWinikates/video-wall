@@ -8,7 +8,7 @@ import FontAwesome
 import Html exposing (Html, a, div, h2)
 import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
-import Model exposing (TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded))
+import Model exposing (Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded))
 import Movie exposing (MovieCollection)
 
 
@@ -21,13 +21,22 @@ collectionSwitchLink collection =
         ]
 
 
-menuView : TrayMode -> Html Msg
-menuView mode =
-    case mode of
+shouldShowTrayButton : Model -> Bool
+shouldShowTrayButton model =
+    model.lastInteractionTime > model.lastTick - 1500
+
+
+menuView : Model -> Html Msg
+menuView model =
+    case model.trayMode of
         Collapsed ->
             div
                 [ style [ ( "position", "absolute" ), ( "top", 20 |> px ), ( "right", 20 |> px ) ] ]
-                [ changeButton (TrayMenu (Expanded ShowingPoem)) (FontAwesome.toggle_left colors.color.thunder 16) ]
+                [ if Model.userHasInteractedRecently model then
+                    changeButton (TrayMenu (Expanded ShowingPoem)) (FontAwesome.toggle_left colors.color.thunder 16)
+                  else
+                    Html.text ""
+                ]
 
         Expanded _ ->
             div
