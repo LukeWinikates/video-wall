@@ -308,23 +308,14 @@ gridItemStyling item =
         )
 
 
-videoUrl : MovieCollection -> Movie -> String
-videoUrl collection movie =
-    ("/public/" ++ collection.id ++ "/" ++ (fileName movie))
-
-
-videoThumbNailUrl : MovieCollection -> Movie -> String
-videoThumbNailUrl collection movie =
-    videoUrl collection movie |> ((flip (++)) ".png")
-
 
 videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
         [ (loop True)
         , (onClick (ChangeItem (ShowPicker True) index))
-        , (src <| videoUrl model.collection movie)
-        , (poster <| videoThumbNailUrl model.collection movie)
+        , (src <| Movie.url model.collection movie)
+        , (poster <| Movie.thumbnailUrl model.collection movie)
         , (volume 0.005)
         , (playbackRate
             (if model.trayMode /= Collapsed then
@@ -407,7 +398,7 @@ moviePickerView model =
             (List.map
                 (\m ->
                     img
-                        [ (src <| videoThumbNailUrl model.collection m)
+                        [ (src <| Movie.thumbnailUrl model.collection m)
                         , (onClick (NewMovie m { x = 200, y = 200 }))
                         , (onMouseEnter (TrayMenu (Expanded (MoviePicker { highlighted = Just m }))))
                         , (onMouseLeave (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))))

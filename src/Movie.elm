@@ -1,4 +1,4 @@
-module Movie exposing (Movie, byOrientation, findById, fileName, fromCollectionId, collections, MovieCollection, fallbackCollection, except)
+module Movie exposing (..)
 
 import Dict exposing (Dict)
 import Geometry exposing (..)
@@ -149,3 +149,13 @@ fallbackCollection =
     , dates = ""
     , movies = []
     }
+
+
+url : MovieCollection -> Movie -> String
+url collection movie =
+    ("/public/" ++ collection.id ++ "/" ++ (fileName movie))
+
+
+thumbnailUrl : MovieCollection -> Movie -> String
+thumbnailUrl collection movie =
+    url collection movie |> ((flip (++)) ".png")
