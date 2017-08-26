@@ -56,7 +56,6 @@ menuView model =
                     , ( "width", "400px" )
                     , ( "background-color", colors.hex.mistyRose )
                     , ( "border-left", "2px solid " ++ colors.hex.thunder )
-                    , ( "box-sizing", "border-box" )
                     ]
                 ]
                 ([ changeButton (TrayMenu Collapsed) (FontAwesome.toggle_right colors.color.thunder 16)

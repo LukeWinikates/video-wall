@@ -4,6 +4,7 @@ import App.Buttons exposing (changeButton, dragButton, movieButton)
 import App.Colors exposing (colors, toCssColorString, transparentize)
 import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
+import App.Styles
 import App.Tray as Tray
 import Color exposing (Color)
 import Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
@@ -31,6 +32,7 @@ import UrlParser exposing (..)
 import Dom.Video exposing (playbackRate, volume)
 import Dom.ZIndexes as ZIndexes
 import Poem exposing (Poem)
+import Css
 import Task
 
 
@@ -59,7 +61,6 @@ import Task
 -- TODO: when in movie picker mode, need a cancel button (maybe Esc works too?)
 -- TODO: clicking tray menu button to dismiss menu is not obvious (maybe make it an X?, make it larger/animated?)
 -- TODO category: general niceness
--- TODO: refactor out a global rule for setting box-sizing: border-box
 -- TODO: it's a little slow to load the videos when serving from GCP - what are some good options? (compression? cdn?)
 -- TODO: unify tick-related events
 
@@ -301,12 +302,10 @@ gridItemStyling item =
             , ( "width", width |> snap |> px )
             , ( "top", item.top |> snap |> px )
             , ( "height", height |> snap |> px )
-            , ( "box-sizing", "border-box" )
             , ( "text-align", "center" )
             , ( "z-index", zIndexForContent item.content )
             ]
         )
-
 
 
 videoTagView : Model -> Int -> Movie -> Html Msg
@@ -407,7 +406,6 @@ moviePickerView model =
                             , ( "margin", "20px" )
                             , ( "height", sizeForMovie m.orientation |> .height |> px )
                             , ( "width", sizeForMovie m.orientation |> .width |> px )
-                            , ( "box-sizing", "border-box" )
                             , ( "cursor", "pointer" )
                             , ( "border"
                               , (if model.trayMode == (Expanded (MoviePicker ({ highlighted = Just m }))) then
@@ -457,6 +455,7 @@ view model =
     body
         []
         [ Html.node "link" [ href "https://fonts.googleapis.com/css?family=Lato", rel "stylesheet" ] []
+        , Html.node "style" [] [ text App.Styles.compiled ]
         , div
             [ Html.Attributes.id "background"
             , (onClickElementWithId "background" (Json.Decode.succeed DismissMenus) identity)
@@ -468,7 +467,6 @@ view model =
                 , ( "display", "flex" )
                 , ( "justify-content", "center" )
                 , ( "align-items", "center" )
-                , ( "font-family", "'Lato', sans-serif" )
                 ]
               )
             ]
