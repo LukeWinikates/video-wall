@@ -5,6 +5,7 @@ import App.Colors exposing (colors, toCssColorString, transparentize)
 import App.Grid exposing (px, snap, videoBorderWidth)
 import App.Msg exposing (Msg(..))
 import App.Styles
+import App.Routing
 import App.Tray as Tray
 import Color exposing (Color)
 import Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
@@ -22,13 +23,10 @@ import Maybe exposing (withDefault)
 import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), empty, gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
-import Model.Serialize exposing (toUrl)
 import Mouse exposing (Position)
 import Movie exposing (..)
-import Navigation exposing (..)
 import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
-import UrlParser exposing (..)
 import Dom.Video exposing (playbackRate, volume)
 import Dom.ZIndexes as ZIndexes
 import Poem exposing (Poem)
@@ -65,46 +63,16 @@ import Task
 -- TODO: unify tick-related events
 
 
-type Route
-    = AppRoute String String
-
-
-route : Parser (Route -> a) a
-route =
-    UrlParser.map AppRoute (string </> string)
 
 
 main =
-    Navigation.program UrlChange
-        { init = init
+    App.Routing.program UrlChange
+        { init = App.Routing.init
         , view = view
         , update = update
         , subscriptions = subscriptions
         }
 
-
-init : Navigation.Location -> ( Model, Cmd Msg )
-init location =
-    (parseHash route location)
-        |> Maybe.map modelFrom
-        |> Maybe.map (flip (,) Cmd.none)
-        |> Maybe.withDefault ( Model.default, Model.default |> modelToUrlCmd )
-
-
-modelFrom : Route -> Model
-modelFrom (AppRoute collectionId itemsString) =
-    Maybe.withDefault Model.empty <|
-        (Maybe.map
-            (\collection ->
-                { empty
-                    | movies = itemsString |> gridItemsFromCommaSeparatedList collection
-                    , collection = collection
-                }
-            )
-            (Movie.fromCollectionId
-                collectionId
-            )
-        )
 
 
 subscriptions : Model -> Sub Msg
@@ -116,16 +84,11 @@ subscriptions model =
         |> Sub.batch
 
 
-modelToUrlCmd : Model -> Cmd Msg
-modelToUrlCmd model =
-    model |> toUrl |> Navigation.modifyUrl
-
-
 wrapDrag : DragEventType -> Model -> ( Model, Cmd Msg )
 wrapDrag typ model =
     case typ of
         End ->
-            ( model, model |> modelToUrlCmd )
+            ( model, model |> App.Routing.modelToUrlCmd )
 
         _ ->
             ( model, Cmd.none )
@@ -137,7 +100,7 @@ update action model =
         wrap model =
             ( model
             , model
-                |> modelToUrlCmd
+                |> App.Routing.modelToUrlCmd
                 |> ((flip (::)) [ Task.perform TrackUserInteraction Time.now ])
                 |> Cmd.batch
             )
