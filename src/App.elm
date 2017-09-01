@@ -42,8 +42,6 @@ import Task
 -- TODO topic: the grid / dragging :
 -- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
--- TODO topic: the item adding workflow
--- TODO: the different states for the process of adding an item feel disjointed
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
 -- TODO category: user feedback
@@ -61,6 +59,7 @@ import Task
 -- TODO category: general niceness
 -- TODO: it's a little slow to load the videos when serving from GCP - what are some good options? (compression? cdn?)
 -- TODO: unify tick-related events
+-- TODO: capture the current screen size when initializing? use the screen size somehow to adjust the video size (as percentages/relative sizes?)
 
 
 
