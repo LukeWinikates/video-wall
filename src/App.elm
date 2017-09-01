@@ -460,8 +460,6 @@ view model =
             , (onClickElementWithId "background" (Json.Decode.succeed DismissMenus) identity)
             , (style
                 [ ( "display", "absolute" )
-                , ( "height", "100vh" )
-                , ( "width", "100vw" )
                 , ( "display", "flex" )
                 , ( "justify-content", "center" )
                 , ( "align-items", "center" )
