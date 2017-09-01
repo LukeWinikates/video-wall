@@ -10,8 +10,10 @@ css =
     stylesheet
         [ body
             [ fontFamilies [ "Lato", "sans-serif" ]
-            , boxSizing borderBox
             , backgroundColor (hex colors.hex.graniteGray)
+            ]
+        , everything
+            [ boxSizing borderBox
             ]
         ]
 
