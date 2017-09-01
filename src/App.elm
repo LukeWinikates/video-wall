@@ -3,6 +3,7 @@ module App exposing (..)
 import App.Buttons exposing (changeButton, dragButton, movieButton)
 import App.Colors exposing (colors, toCssColorString, transparentize)
 import App.Grid exposing (px, snap, videoBorderWidth)
+import App.GridEdges as GridEdges
 import App.Msg exposing (Msg(..))
 import App.Styles
 import App.Routing
@@ -20,7 +21,7 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), empty, gridItemsFromCommaSeparatedList)
+import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), empty, gridItemsFromCommaSeparatedList, dimensionsForContent)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Mouse exposing (Position)
@@ -60,9 +61,12 @@ import Task
 -- TODO: it's a little slow to load the videos when serving from GCP - what are some good options? (compression? cdn?)
 -- TODO: unify tick-related events
 -- TODO: capture the current screen size when initializing? use the screen size somehow to adjust the video size (as percentages/relative sizes?)
-
-
-
+-- TODO: when panel opens up in response to interaction with an element, pick the left or right side dynamically depending on which keeps the element visible
+-- TODO: on click, open panel to select video
+-- TODO: remove "add video" button from side panel
+-- TODO: use hover cursor for the adder
+-- TODO: consolidate duplicated styles for borders, positioning
+-- TODO: style the adder better
 
 main =
     App.Routing.program UrlChange
@@ -71,7 +75,6 @@ main =
         , update = update
         , subscriptions = subscriptions
         }
-
 
 
 subscriptions : Model -> Sub Msg
@@ -230,17 +233,6 @@ helperViews collection content index =
                         orientation
                     )
             )
-
-
-dimensionsForContent : GridContent -> Dimension
-dimensionsForContent content =
-    let
-        ( orientation, scale ) =
-            case content of
-                Content orientation scale _ _ ->
-                    ( orientation, scale )
-    in
-        dimension scale orientation
 
 
 zIndexForContent : GridContent -> String
@@ -412,6 +404,39 @@ overlayView model =
             Html.text ""
 
 
+movieAdder : Position -> Html Msg
+movieAdder position =
+    div
+        [ (style
+            [ ( "position", "absolute" )
+            , ( "left", position.x |> snap |> px )
+            , ( "width", 200 |> snap |> px )
+            , ( "top", position.y |> snap |> px )
+            , ( "height", 200 |> snap |> px )
+            , ( "text-align", "center" )
+            , ( "border", "4px dashed " ++ colors.hex.thunder )
+            , ( "border-radius", "2px" )
+            , ( "background-color", colors.hex.graniteGray )
+            ]
+          )
+        ]
+        [ Html.text "add a video" ]
+
+
+movieAdders : Model -> List (Html Msg)
+movieAdders model =
+    let
+        padding =
+            20
+    in
+        if List.isEmpty model.movies then
+            [ movieAdder { x = padding, y = padding } ]
+        else
+            [ movieAdder { x = GridEdges.leftEdge model, y = padding + GridEdges.bottomEdge model }
+            , movieAdder { x = padding + GridEdges.rightEdge model, y = GridEdges.topEdge model }
+            ]
+
+
 view : Model -> Html Msg
 view model =
     body
@@ -434,6 +459,7 @@ view model =
             ]
             (List.concat
                 [ (indexedMap (gridMovieView model) model.movies)
+                , movieAdders model
                 , ((Maybe.map
                         (always (guideLines model))
                         model.dragging

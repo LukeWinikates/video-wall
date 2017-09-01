@@ -7,10 +7,14 @@ import Model exposing (Model, empty, gridItemsFromCommaSeparatedList)
 import App.Msg exposing (Msg(..))
 import Model.Serialize exposing (toUrl)
 
+
 type Route
     = AppRoute String String
 
-program = Navigation.program
+
+program =
+    Navigation.program
+
 
 route : Parser (Route -> a) a
 route =
@@ -39,6 +43,7 @@ modelFrom (AppRoute collectionId itemsString) =
                 collectionId
             )
         )
+
 
 modelToUrlCmd : Model -> Cmd Msg
 modelToUrlCmd model =

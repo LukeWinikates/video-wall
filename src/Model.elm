@@ -117,3 +117,14 @@ defaultMenuState =
 gridItemsFromCommaSeparatedList : MovieCollection -> String -> List GridItem
 gridItemsFromCommaSeparatedList collection movieId =
     movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.filterMap (hydrate collection)
+
+
+dimensionsForContent : GridContent -> Dimension
+dimensionsForContent content =
+    let
+        ( orientation, scale ) =
+            case content of
+                Content orientation scale _ _ ->
+                    ( orientation, scale )
+    in
+        dimension scale orientation
