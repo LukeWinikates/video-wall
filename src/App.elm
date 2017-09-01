@@ -66,7 +66,8 @@ import Task
 -- TODO: remove "add video" button from side panel
 -- TODO: use hover cursor for the adder
 -- TODO: consolidate duplicated styles for borders, positioning
--- TODO: style the adder better
+-- TODO: hide the adders if the user doesn't interact for a while and the list is nonempty
+
 
 main =
     App.Routing.program UrlChange
@@ -408,19 +409,30 @@ movieAdder : Position -> Html Msg
 movieAdder position =
     div
         [ (style
-            [ ( "position", "absolute" )
-            , ( "left", position.x |> snap |> px )
-            , ( "width", 200 |> snap |> px )
-            , ( "top", position.y |> snap |> px )
-            , ( "height", 200 |> snap |> px )
-            , ( "text-align", "center" )
-            , ( "border", "4px dashed " ++ colors.hex.thunder )
-            , ( "border-radius", "2px" )
-            , ( "background-color", colors.hex.graniteGray )
-            ]
+            ([ ( "position", "absolute" )
+             , ( "left", position.x |> snap |> px )
+             , ( "width", 200 |> snap |> px )
+             , ( "top", position.y |> snap |> px )
+             , ( "height", 200 |> snap |> px )
+             , ( "text-align", "center" )
+             , ( "border", "4px dashed " ++ colors.hex.thunder )
+             , ( "border-radius", "2px" )
+             , ( "background-color", colors.hex.graniteGray )
+             , ( "color", colors.hex.thunder )
+             , ( "cursor", "pointer" )
+             ]
+                ++ [ ( "display", "flex" )
+                   , ( "justify-content", "center" )
+                   , ( "align-items", "center" )
+                   ]
+            )
           )
         ]
-        [ Html.text "add a video" ]
+        [ div []
+            [ Html.text "add a video"
+            , p [] [ (FontAwesome.plus colors.color.thunder 24) ]
+            ]
+        ]
 
 
 movieAdders : Model -> List (Html Msg)
