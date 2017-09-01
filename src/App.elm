@@ -284,7 +284,7 @@ videoTagView model index movie =
 
                     Vertical ->
                         "max-width"
-              , "calc(100% - " ++ ((2 * videoBorderWidth) |> px) ++ ")"
+              , "100%"
               )
             , ( "border", (videoBorderWidth |> px) ++ " solid " ++ colors.hex.thunder )
             , ( "border-radius", "2px" )
