@@ -65,6 +65,7 @@ import Task
 -- TODO: on click, open panel to select video
 -- TODO: consolidate duplicated styles for borders, positioning
 -- TODO: hide the adders if the user doesn't interact for a while and the list is nonempty
+-- TODO: drop the font awesome Elm package, and use the more conventional CSS font awesome version instead
 
 
 main =
@@ -461,7 +462,6 @@ view model =
                 [ ( "display", "absolute" )
                 , ( "height", "100vh" )
                 , ( "width", "100vw" )
-                , ( "background-color", colors.hex.graniteGray )
                 , ( "display", "flex" )
                 , ( "justify-content", "center" )
                 , ( "align-items", "center" )
