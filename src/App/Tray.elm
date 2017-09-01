@@ -62,7 +62,4 @@ menuView model =
                  , h2 [] [ Html.text "Collections" ]
                  ]
                     ++ (List.map collectionSwitchLink Movie.collections)
-                    ++ [ h2 [] [ Html.text "Videos" ]
-                       , a [ onClick (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))) ] [ Html.text "Add +" ]
-                       ]
                 )

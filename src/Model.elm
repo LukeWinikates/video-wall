@@ -4,7 +4,7 @@ import Dom.Dragging as Dragging
 import Movie exposing (..)
 import Movie exposing (..)
 import Geometry exposing (..)
-import Mouse
+import Mouse exposing (Position)
 import Model.Parser exposing (ItemDescription)
 import Primitives exposing (resultToMaybe)
 import Time exposing (Time)
@@ -43,7 +43,7 @@ type TrayMode
 
 
 type alias PickerState =
-    { highlighted : Maybe Movie }
+    { highlighted : Maybe Movie, position : Position }
 
 
 type TrayContent

@@ -63,8 +63,6 @@ import Task
 -- TODO: capture the current screen size when initializing? use the screen size somehow to adjust the video size (as percentages/relative sizes?)
 -- TODO: when panel opens up in response to interaction with an element, pick the left or right side dynamically depending on which keeps the element visible
 -- TODO: on click, open panel to select video
--- TODO: remove "add video" button from side panel
--- TODO: use hover cursor for the adder
 -- TODO: consolidate duplicated styles for borders, positioning
 -- TODO: hide the adders if the user doesn't interact for a while and the list is nonempty
 
@@ -332,8 +330,8 @@ movieFromGridItem item =
             m
 
 
-moviePickerView : Model -> Html Msg
-moviePickerView model =
+moviePickerView : Model -> Position -> Html Msg
+moviePickerView model position =
     let
         movies =
             Movie.except model.collection (List.map movieFromGridItem model.movies)
@@ -353,22 +351,22 @@ moviePickerView model =
                 (\m ->
                     img
                         [ (src <| Movie.thumbnailUrl model.collection m)
-                        , (onClick (NewMovie m { x = 200, y = 200 }))
-                        , (onMouseEnter (TrayMenu (Expanded (MoviePicker { highlighted = Just m }))))
-                        , (onMouseLeave (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))))
+                        , (onClick (NewMovie m position))
+                          --                        , (onMouseEnter (TrayMenu (Expanded (MoviePicker { highlighted = Just m }))))
+                          --                        , (onMouseLeave (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))))
                         , (style
                             [ ( "padding", "20px" )
                             , ( "margin", "20px" )
                             , ( "height", sizeForMovie m.orientation |> .height |> px )
                             , ( "width", sizeForMovie m.orientation |> .width |> px )
                             , ( "cursor", "pointer" )
-                            , ( "border"
-                              , (if model.trayMode == (Expanded (MoviePicker ({ highlighted = Just m }))) then
-                                    "2px solid " ++ colors.hex.thunder
-                                 else
-                                    "none"
-                                )
-                              )
+                              --                            , ( "border"
+                              --                              , (if model.trayMode == (Expanded (MoviePicker ({ highlighted = Just m }))) then
+                              --                                    "2px solid " ++ colors.hex.thunder
+                              --                                 else
+                              --                                    "none"
+                              --                                )
+                              --                              )
                             ]
                           )
                         ]
@@ -397,8 +395,8 @@ overlayView model =
                     ShowingPoem ->
                         poemView <| Poem.poem model
 
-                    MoviePicker _ ->
-                        moviePickerView <| model
+                    MoviePicker pickerState ->
+                        moviePickerView model pickerState.position
                 ]
 
         Collapsed ->
@@ -427,6 +425,7 @@ movieAdder position =
                    ]
             )
           )
+        , onClick (TrayMenu (Expanded (MoviePicker { highlighted = Nothing, position = position })))
         ]
         [ div []
             [ Html.text "add a video"
