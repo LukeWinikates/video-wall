@@ -21,8 +21,7 @@ type alias GridItem =
 
 
 type alias MenuState =
-    { videoPicker : Bool
-    , hoverMenu : Bool
+    { hoverMenu : Bool
     }
 
 
@@ -106,8 +105,7 @@ hydrate collection definition =
 
 defaultMenuState : MenuState
 defaultMenuState =
-    { videoPicker = False
-    , hoverMenu = False
+    { hoverMenu = False
     }
 
 

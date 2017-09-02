@@ -12,18 +12,8 @@ import Mouse exposing (Position)
 type Mutation
     = Swap Movie
     | Resize Scale
-    | ShowPicker Bool
     | ShowHoverMenu Bool
     | Rotate Orientation
-
-
-toggleVideoPicker : Bool -> GridItem -> GridItem
-toggleVideoPicker bool gridItem =
-    let
-        ms =
-            gridItem.menuState
-    in
-        { gridItem | menuState = { ms | videoPicker = bool } }
 
 
 toggleHoverMenu : Bool -> GridItem -> GridItem
@@ -37,11 +27,7 @@ toggleHoverMenu bool gridItem =
 
 clearMenus : GridItem -> GridItem
 clearMenus gridItem =
-    let
-        ms =
-            gridItem.menuState
-    in
-        { gridItem | menuState = { ms | videoPicker = False, hoverMenu = False } }
+    { gridItem | menuState = defaultMenuState }
 
 
 rotate : Orientation -> GridItem -> GridItem
@@ -77,13 +63,10 @@ applyMutationAtIndex mutation index model =
     applyAtIndex
         (case mutation of
             Swap movie ->
-                setMovie movie >> (toggleHoverMenu True) >> (toggleVideoPicker False)
+                setMovie movie >> (toggleHoverMenu True)
 
             Resize scale ->
                 resizeItem scale >> (toggleHoverMenu False)
-
-            ShowPicker mode ->
-                toggleVideoPicker mode >> (toggleHoverMenu (not mode))
 
             Rotate currentOrientation ->
                 rotate currentOrientation

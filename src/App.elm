@@ -23,7 +23,7 @@ import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
 import Model exposing (GridItem, Model, PickerState, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), dimensionsForContent, empty, gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, drag, hideTray, newItem, remove, resize, setMovie)
 import Mouse exposing (Position)
 import Movie exposing (..)
 import Primitives exposing (resultToMaybe, orMaybe)
@@ -194,40 +194,12 @@ hoverMenu index orientation =
     )
 
 
-videoPicker : Int -> MovieCollection -> Orientation -> Html Msg
-videoPicker index collection orientation =
-    (ul
-        [ (style
-            [ ( "background-color", colors.hex.platinum )
-            , ( "width", "100%" )
-            , ( "height", "100%" )
-            , ( "padding", "10px" )
-            , ( "border", "10px solid " ++ colors.hex.thunder )
-            , ( "border-radius", "2px" )
-            , ( "list-style", "none" )
-            , ( "margin", "auto" )
-            , ( "position", "absolute" )
-            , ( "top", "0" )
-            , ( "left", "0" )
-            ]
-          )
-        ]
-        (List.map (movieItem index) (byOrientation collection orientation))
-    )
-
-
 helperViews : MovieCollection -> GridItem -> Int -> List (Html Msg)
 helperViews collection { orientation, scale, movie, menuState } index =
     ([]
         |> consIf menuState.hoverMenu
             (hoverMenu
                 index
-                orientation
-            )
-        |> consIf menuState.videoPicker
-            (videoPicker
-                index
-                collection
                 orientation
             )
     )
@@ -264,7 +236,7 @@ videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
         [ (loop True)
-        , (onClick (ChangeItem (ShowPicker True) index))
+          --        , (onClick (Trya (ShowPicker True) index))
         , (src <| Movie.url model.collection movie)
         , (poster <| Movie.thumbnailUrl model.collection movie)
         , (volume 0.005)
