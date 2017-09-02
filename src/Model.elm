@@ -111,7 +111,10 @@ defaultMenuState =
 
 gridItemsFromCommaSeparatedList : MovieCollection -> String -> List GridItem
 gridItemsFromCommaSeparatedList collection movieId =
-    movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.filterMap (hydrate collection)
+    movieId
+        |> String.split ","
+        |> List.filterMap (Model.Parser.parseItem >> resultToMaybe)
+        |> List.filterMap (hydrate collection)
 
 
 dimensionsForContent : GridItem -> Dimension
