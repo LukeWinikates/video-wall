@@ -61,11 +61,13 @@ import Task
 -- TODO: capture the current screen size when initializing? use the screen size somehow to adjust the video size (as percentages/relative sizes?)
 -- TODO: when panel opens up in response to interaction with an element, pick the left or right side dynamically depending on which keeps the element visible
 -- TODO: consolidate duplicated styles for borders, positioning
--- TODO: hide the adders if the user doesn't interact for a while and the list is nonempty
 -- TODO: drop the font awesome Elm package, and use the more conventional CSS font awesome version instead
 -- TODO: move the movie picker into the sidebar
 -- TODO: fix the small z-index weirdness (hovered GridItem has higher z-index than the overlay)
-
+-- TODO: maybe show the adders/the button for a bit longer?
+-- TODO: instead of redirecting to a fully-populated view, just show the "add a movie" button?
+-- TODO: add a "clear" button?
+-- TODO: come up with a name for the main canvas/grid of videos
 
 main =
     App.Routing.program UrlChange
@@ -432,10 +434,12 @@ movieAdders model =
     in
         if List.isEmpty model.movies then
             [ movieAdder { x = padding, y = padding } ]
-        else
+        else if Model.userHasInteractedRecently model then
             [ movieAdder { x = GridEdges.leftEdge model, y = padding + GridEdges.bottomEdge model }
             , movieAdder { x = padding + GridEdges.rightEdge model, y = GridEdges.topEdge model }
             ]
+        else
+            []
 
 
 view : Model -> Html Msg
@@ -455,6 +459,7 @@ view model =
                 ]
               )
             ]
+            -- TODO: refactor this somehow... it's hard to read.
             (List.concat
                 [ (indexedMap (gridMovieView model) model.movies)
                 , movieAdders model
