@@ -21,12 +21,12 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), empty, gridItemsFromCommaSeparatedList, dimensionsForContent)
+import Model exposing (GridContent(..), GridItem, Model, PickerState, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), dimensionsForContent, empty, gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Mouse exposing (Position)
 import Movie exposing (..)
-import Primitives exposing (resultToMaybe)
+import Primitives exposing (resultToMaybe, orMaybe)
 import Time exposing (Time)
 import Dom.Video exposing (playbackRate, volume)
 import Dom.ZIndexes as ZIndexes
@@ -331,14 +331,22 @@ movieFromGridItem item =
             m
 
 
-moviePickerView : Model -> Position -> Html Msg
-moviePickerView model position =
+moviePickerView : Model -> PickerState -> Html Msg
+moviePickerView model pickerstate =
     let
         movies =
             Movie.except model.collection (List.map movieFromGridItem model.movies)
 
-        sizeForMovie =
-            dimension Small
+        highlightedMovie =
+            orMaybe pickerstate.highlighted (List.head movies)
+
+        sizeForMovie orientation =
+            case orientation of
+                Horizontal ->
+                    { height = 60, width = 100 }
+
+                Vertical ->
+                    { width = 60, height = 100 }
     in
         div
             [ style
@@ -346,34 +354,47 @@ moviePickerView model position =
                 , ( "overflow-y", "scroll" )
                 , ( "width", "calc(100vw - 400px)" )
                 , ( "height", "100%" )
+                , ( "padding", "20px" )
                 ]
             ]
-            (List.map
-                (\m ->
-                    img
-                        [ (src <| Movie.thumbnailUrl model.collection m)
-                        , (onClick (NewMovie m position))
-                          --                        , (onMouseEnter (TrayMenu (Expanded (MoviePicker { highlighted = Just m }))))
-                          --                        , (onMouseLeave (TrayMenu (Expanded (MoviePicker { highlighted = Nothing }))))
-                        , (style
-                            [ ( "padding", "20px" )
-                            , ( "margin", "20px" )
-                            , ( "height", sizeForMovie m.orientation |> .height |> px )
-                            , ( "width", sizeForMovie m.orientation |> .width |> px )
-                            , ( "cursor", "pointer" )
-                              --                            , ( "border"
-                              --                              , (if model.trayMode == (Expanded (MoviePicker ({ highlighted = Just m }))) then
-                              --                                    "2px solid " ++ colors.hex.thunder
-                              --                                 else
-                              --                                    "none"
-                              --                                )
-                              --                              )
-                            ]
-                          )
-                        ]
-                        []
-                )
-                movies
+            ([ div
+                []
+                [ h2 [] [ Html.text <| Maybe.withDefault "Hover to select movie" <| Maybe.map .description highlightedMovie ]
+                , video
+                    [ src (Maybe.map (Movie.url model.collection) highlightedMovie |> Maybe.withDefault "")
+                    , poster ((Maybe.map (Movie.thumbnailUrl model.collection) highlightedMovie |> Maybe.withDefault ""))
+                    , autoplay True
+                    , volume 0
+                    , loop True
+                    , height 320
+                    ]
+                    []
+                ]
+             ]
+                ++ (List.map
+                        (\m ->
+                            img
+                                [ (src <| Movie.thumbnailUrl model.collection m)
+                                , (onClick (NewMovie m pickerstate.position))
+                                , (onMouseEnter (TrayMenu (Expanded (MoviePicker { pickerstate | highlighted = Just m }))))
+                                , (style
+                                    [ ( "padding", "2px" )
+                                    , ( "height", sizeForMovie m.orientation |> .height |> px )
+                                    , ( "width", sizeForMovie m.orientation |> .width |> px )
+                                    , ( "cursor", "pointer" )
+                                    , ( "border"
+                                      , if Just m == highlightedMovie then
+                                            "2px solid " ++ colors.hex.thunder
+                                        else
+                                            "none"
+                                      )
+                                    ]
+                                  )
+                                ]
+                                []
+                        )
+                        movies
+                   )
             )
 
 
@@ -384,7 +405,7 @@ overlayView model =
             div
                 [ onClick (TrayMenu Collapsed)
                 , style
-                    [ ( "position", "absolute" )
+                    [ ( "position", "fixed" )
                     , ( "top", "0" )
                     , ( "left", "0" )
                     , ( "background-color", colors.color.thunder |> transparentize 0.9 |> toCssColorString )
@@ -397,7 +418,7 @@ overlayView model =
                         poemView <| Poem.poem model
 
                     MoviePicker pickerState ->
-                        moviePickerView model pickerState.position
+                        moviePickerView model pickerState
                 ]
 
         Collapsed ->
