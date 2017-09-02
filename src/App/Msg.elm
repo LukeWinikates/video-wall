@@ -12,7 +12,7 @@ import Time exposing (Time)
 type Msg
     = ChangeItem Mutation Int
     | UrlChange Navigation.Location
-    | NewMovie Movie Position
+    | NewMovie Position Movie
     | DragMovie Int DragEvent
     | Remove Int
     | TrayMenu TrayMode

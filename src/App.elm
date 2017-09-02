@@ -21,7 +21,7 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridItem, Model, PickerState, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), dimensionsForContent, empty, gridItemsFromCommaSeparatedList)
+import Model exposing (GridItem, Model, PickerState, TrayContent(MovieChanger, MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), dimensionsForContent, empty, gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
 import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, drag, hideTray, newItem, remove, resize, setMovie)
 import Mouse exposing (Position)
@@ -62,11 +62,11 @@ import Task
 -- TODO: unify tick-related events
 -- TODO: capture the current screen size when initializing? use the screen size somehow to adjust the video size (as percentages/relative sizes?)
 -- TODO: when panel opens up in response to interaction with an element, pick the left or right side dynamically depending on which keeps the element visible
--- TODO: on click, open panel to select video
 -- TODO: consolidate duplicated styles for borders, positioning
 -- TODO: hide the adders if the user doesn't interact for a while and the list is nonempty
 -- TODO: drop the font awesome Elm package, and use the more conventional CSS font awesome version instead
-
+-- TODO: move the movie picker into the sidebar
+-- TODO: fix the small z-index weirdness (hovered GridItem has higher z-index than the overlay)
 
 main =
     App.Routing.program UrlChange
@@ -236,7 +236,7 @@ videoTagView : Model -> Int -> Movie -> Html Msg
 videoTagView model index movie =
     video
         [ (loop True)
-          --        , (onClick (Trya (ShowPicker True) index))
+        , (onClick (TrayMenu (Expanded (MovieChanger index { highlighted = Nothing }))))
         , (src <| Movie.url model.collection movie)
         , (poster <| Movie.thumbnailUrl model.collection movie)
         , (volume 0.005)
@@ -288,8 +288,8 @@ poemView poem =
         )
 
 
-moviePickerView : Model -> PickerState -> Html Msg
-moviePickerView model pickerstate =
+moviePickerView : Model -> (Movie -> Msg) -> (Movie -> Msg) -> PickerState -> Html Msg
+moviePickerView model makeEvent highlightMovie pickerstate =
     let
         movies =
             Movie.except model.collection (List.map .movie model.movies)
@@ -332,8 +332,8 @@ moviePickerView model pickerstate =
                         (\m ->
                             img
                                 [ (src <| Movie.thumbnailUrl model.collection m)
-                                , (onClick (NewMovie m pickerstate.position))
-                                , (onMouseEnter (TrayMenu (Expanded (MoviePicker { pickerstate | highlighted = Just m }))))
+                                , (onClick (makeEvent m))
+                                , (onMouseEnter <| highlightMovie m)
                                 , (style
                                     [ ( "padding", "2px" )
                                     , ( "height", sizeForMovie m.orientation |> .height |> px )
@@ -374,8 +374,11 @@ overlayView model =
                     ShowingPoem ->
                         poemView <| Poem.poem model
 
-                    MoviePicker pickerState ->
-                        moviePickerView model pickerState
+                    MoviePicker position pickerState ->
+                        moviePickerView model (NewMovie position) (\m -> (TrayMenu (Expanded (MoviePicker position { highlighted = Just m })))) pickerState
+
+                    MovieChanger index pickerState ->
+                        moviePickerView model (Swap >> ((flip ChangeItem) index)) (\m -> (TrayMenu (Expanded (MovieChanger index { highlighted = Just m })))) pickerState
                 ]
 
         Collapsed ->
@@ -404,7 +407,7 @@ movieAdder position =
                    ]
             )
           )
-        , onClick (TrayMenu (Expanded (MoviePicker { highlighted = Nothing, position = position })))
+        , onClick (TrayMenu (Expanded (MoviePicker position { highlighted = Nothing })))
         ]
         [ div []
             [ Html.text "add a video"

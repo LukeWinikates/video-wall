@@ -111,8 +111,8 @@ hideTray model =
     { model | trayMode = Collapsed }
 
 
-newItem : Movie -> Position -> Model -> Model
-newItem movie position model =
+newItem : Position -> Movie -> Model -> Model
+newItem position movie model =
     { model
         | movies =
             model.movies

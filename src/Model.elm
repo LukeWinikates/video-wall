@@ -41,12 +41,13 @@ type TrayMode
 
 
 type alias PickerState =
-    { highlighted : Maybe Movie, position : Position }
+    { highlighted : Maybe Movie }
 
 
 type TrayContent
     = ShowingPoem
-    | MoviePicker PickerState
+    | MoviePicker Position PickerState
+    | MovieChanger Int PickerState
 
 
 empty : Model
