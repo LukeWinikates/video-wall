@@ -33,7 +33,7 @@ menuView model =
         Collapsed ->
             div
                 [ style
-                    [ ( "position", "absolute" )
+                    [ ( "position", "fixed" )
                     , ( "top", 20 |> px )
                     , ( "right", 20 |> px )
                     , ( "z-index", ZIndexes.topmost |> toString )
@@ -48,7 +48,7 @@ menuView model =
         Expanded _ ->
             div
                 [ style
-                    [ ( "position", "absolute" )
+                    [ ( "position", "fixed" )
                     , ( "top", 0 |> px )
                     , ( "right", 0 |> px )
                     , ( "padding", 20 |> px )
