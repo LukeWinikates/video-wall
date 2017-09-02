@@ -21,9 +21,9 @@ import Json.Decode exposing (Decoder)
 import Json.Encode
 import List exposing (drop, foldl, head, indexedMap, map, tail, take)
 import Maybe exposing (withDefault)
-import Model exposing (GridContent(..), GridItem, Model, PickerState, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), dimensionsForContent, empty, gridItemsFromCommaSeparatedList)
+import Model exposing (GridItem, Model, PickerState, TrayContent(MoviePicker, ShowingPoem), TrayMode(Collapsed, Expanded), dimensionsForContent, empty, gridItemsFromCommaSeparatedList)
 import Model.MovieSwitcher
-import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, content, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
+import Model.Mutate exposing (Mutation(..), applyAll, applyAtIndex, applyMutationAtIndex, changePosition, clearMenus, drag, hideTray, newItem, remove, resize, setMovie, toggleVideoPicker)
 import Mouse exposing (Position)
 import Movie exposing (..)
 import Primitives exposing (resultToMaybe, orMaybe)
@@ -216,29 +216,27 @@ videoPicker index collection orientation =
     )
 
 
-helperViews : MovieCollection -> GridContent -> Int -> List (Html Msg)
-helperViews collection content index =
-    case content of
-        Content orientation scale movie menus ->
-            ([]
-                |> consIf menus.hoverMenu
-                    (hoverMenu
-                        index
-                        orientation
-                    )
-                |> consIf menus.videoPicker
-                    (videoPicker
-                        index
-                        collection
-                        orientation
-                    )
+helperViews : MovieCollection -> GridItem -> Int -> List (Html Msg)
+helperViews collection { orientation, scale, movie, menuState } index =
+    ([]
+        |> consIf menuState.hoverMenu
+            (hoverMenu
+                index
+                orientation
             )
+        |> consIf menuState.videoPicker
+            (videoPicker
+                index
+                collection
+                orientation
+            )
+    )
 
 
-zIndexForContent : GridContent -> String
-zIndexForContent (Content _ _ _ menus) =
+zIndexForItem : GridItem -> String
+zIndexForItem { menuState } =
     toString <|
-        if menus.hoverMenu then
+        if menuState.hoverMenu then
             ZIndexes.activeGridContent
         else
             ZIndexes.bottommost
@@ -248,7 +246,7 @@ gridItemStyling : GridItem -> Attribute Msg
 gridItemStyling item =
     let
         { height, width } =
-            dimensionsForContent item.content
+            dimensionsForContent item
     in
         (style
             [ ( "position", "absolute" )
@@ -257,7 +255,7 @@ gridItemStyling item =
             , ( "top", item.top |> snap |> px )
             , ( "height", height |> snap |> px )
             , ( "text-align", "center" )
-            , ( "z-index", zIndexForContent item.content )
+            , ( "z-index", zIndexForItem item )
             ]
         )
 
@@ -298,20 +296,14 @@ videoTagView model index movie =
 
 gridMovieView : Model -> Int -> GridItem -> Html Msg
 gridMovieView model index gridItem =
-    let
-        styles =
-            gridItemStyling gridItem
-    in
-        case gridItem.content of
-            Content orientation scale movie menus ->
-                div
-                    [ styles
-                    , (onMouseOver (ChangeItem (ShowHoverMenu True) index))
-                    , (onMouseOut (ChangeItem (ShowHoverMenu False) index))
-                    ]
-                    ([ videoTagView model index movie ]
-                        ++ (helperViews model.collection gridItem.content index)
-                    )
+    div
+        [ gridItemStyling gridItem
+        , (onMouseOver (ChangeItem (ShowHoverMenu True) index))
+        , (onMouseOut (ChangeItem (ShowHoverMenu False) index))
+        ]
+        ([ videoTagView model index gridItem.movie ]
+            ++ (helperViews model.collection gridItem index)
+        )
 
 
 poemView : Poem -> Html Msg
@@ -324,18 +316,11 @@ poemView poem =
         )
 
 
-movieFromGridItem : GridItem -> Movie
-movieFromGridItem item =
-    case item.content of
-        Content _ _ m _ ->
-            m
-
-
 moviePickerView : Model -> PickerState -> Html Msg
 moviePickerView model pickerstate =
     let
         movies =
-            Movie.except model.collection (List.map movieFromGridItem model.movies)
+            Movie.except model.collection (List.map .movie model.movies)
 
         highlightedMovie =
             orMaybe pickerstate.highlighted (List.head movies)

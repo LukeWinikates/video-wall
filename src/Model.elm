@@ -13,7 +13,10 @@ import Time exposing (Time)
 type alias GridItem =
     { top : Int
     , left : Int
-    , content : GridContent
+    , orientation : Orientation
+    , scale : Scale
+    , movie : Movie
+    , menuState : MenuState
     }
 
 
@@ -21,10 +24,6 @@ type alias MenuState =
     { videoPicker : Bool
     , hoverMenu : Bool
     }
-
-
-type GridContent
-    = Content Orientation Scale Movie MenuState
 
 
 type alias Model =
@@ -97,12 +96,10 @@ hydrate collection definition =
             (\movie ->
                 { top = definition.top
                 , left = definition.left
-                , content =
-                    Content
-                        definition.orientation
-                        definition.scale
-                        movie
-                        defaultMenuState
+                , orientation = definition.orientation
+                , scale = definition.scale
+                , movie = movie
+                , menuState = defaultMenuState
                 }
             )
 
@@ -119,12 +116,6 @@ gridItemsFromCommaSeparatedList collection movieId =
     movieId |> String.split "," |> List.filterMap (Model.Parser.parseItem >> resultToMaybe) |> List.filterMap (hydrate collection)
 
 
-dimensionsForContent : GridContent -> Dimension
-dimensionsForContent content =
-    let
-        ( orientation, scale ) =
-            case content of
-                Content orientation scale _ _ ->
-                    ( orientation, scale )
-    in
-        dimension scale orientation
+dimensionsForContent : GridItem -> Dimension
+dimensionsForContent item =
+    dimension item.scale item.orientation

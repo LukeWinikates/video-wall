@@ -13,7 +13,7 @@ bottomEdge model =
 
 itemBottomEdge : GridItem -> Int
 itemBottomEdge item =
-    (Model.dimensionsForContent item.content)
+    Model.dimensionsForContent item
         |> .height
         |> (+) item.top
 
@@ -28,7 +28,7 @@ rightEdge model =
 
 itemRightEdge : GridItem -> Int
 itemRightEdge item =
-    (Model.dimensionsForContent item.content)
+    Model.dimensionsForContent item
         |> .width
         |> (+) item.left
 

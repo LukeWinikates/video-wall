@@ -1,7 +1,7 @@
 module Model.MovieSwitcher exposing (replaceMovies)
 
 import Geometry exposing (Orientation(Horizontal, Vertical))
-import Model exposing (GridContent(Content), GridItem)
+import Model exposing (GridItem)
 import Movie exposing (Movie, MovieCollection)
 import List.Extra exposing (andMap)
 import List exposing (map)
@@ -18,17 +18,10 @@ replaceMovies gridItems collection =
             Movie.byOrientation collection Horizontal
 
         remaining =
-            List.map orientationFrom gridItems
+            List.map .orientation gridItems
     in
         pickSubstitutableMovies { horizontals = horizontals, verticals = verticals, remaining = remaining, populated = [] }
             |> injectMoviesInto gridItems
-
-
-orientationFrom : GridItem -> Orientation
-orientationFrom gridItem =
-    case gridItem.content of
-        Content o _ _ _ ->
-            o
 
 
 swapOrUnsetMovieContent : GridItem -> Movie -> GridItem

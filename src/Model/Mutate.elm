@@ -15,42 +15,41 @@ type Mutation
     | ShowPicker Bool
     | ShowHoverMenu Bool
     | Rotate Orientation
-    | ContentChange GridContent
 
 
 toggleVideoPicker : Bool -> GridItem -> GridItem
 toggleVideoPicker bool gridItem =
-    case gridItem.content of
-        Content o s m ms ->
-            { gridItem | content = Content o s m { ms | videoPicker = bool } }
+    let
+        ms =
+            gridItem.menuState
+    in
+        { gridItem | menuState = { ms | videoPicker = bool } }
 
 
 toggleHoverMenu : Bool -> GridItem -> GridItem
 toggleHoverMenu bool gridItem =
-    case gridItem.content of
-        Content o s m ms ->
-            { gridItem | content = Content o s m { ms | hoverMenu = bool } }
+    let
+        ms =
+            gridItem.menuState
+    in
+        { gridItem | menuState = { ms | hoverMenu = bool } }
 
 
 clearMenus : GridItem -> GridItem
 clearMenus gridItem =
-    case gridItem.content of
-        Content o s m ms ->
-            { gridItem | content = Content o s m { ms | videoPicker = False, hoverMenu = False } }
+    let
+        ms =
+            gridItem.menuState
+    in
+        { gridItem | menuState = { ms | videoPicker = False, hoverMenu = False } }
 
 
 rotate : Orientation -> GridItem -> GridItem
 rotate oldOrientation gridItem =
-    case gridItem.content of
-        Content o s m ms ->
-            { gridItem
-                | content =
-                    Content
-                        (Geometry.flipOrientation oldOrientation)
-                        s
-                        m
-                        ms
-            }
+    { gridItem
+        | orientation =
+            (Geometry.flipOrientation oldOrientation)
+    }
 
 
 applyAll : (GridItem -> GridItem) -> Model -> Model
@@ -91,31 +90,19 @@ applyMutationAtIndex mutation index model =
 
             ShowHoverMenu bool ->
                 toggleHoverMenu bool
-
-            ContentChange newContent ->
-                content newContent
         )
         index
         model
 
 
-content : GridContent -> GridItem -> GridItem
-content gridContent item =
-    { item | content = gridContent }
-
-
 setMovie : Movie -> GridItem -> GridItem
 setMovie newMovie gridItem =
-    case gridItem.content of
-        Content o s m ms ->
-            { gridItem | content = Content o s newMovie ms }
+    { gridItem | movie = newMovie }
 
 
 resizeItem : Scale -> GridItem -> GridItem
 resizeItem scale gridItem =
-    case gridItem.content of
-        Content o s m ms ->
-            { gridItem | content = Content o scale m ms }
+    { gridItem | scale = scale }
 
 
 resize : Scale -> Int -> Model -> Model
@@ -148,7 +135,10 @@ newItem movie position model =
             model.movies
                 ++ [ { top = position.y
                      , left = position.x
-                     , content = Content movie.orientation Medium movie defaultMenuState
+                     , orientation = movie.orientation
+                     , scale = Medium
+                     , movie = movie
+                     , menuState = defaultMenuState
                      }
                    ]
     }

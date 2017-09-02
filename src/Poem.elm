@@ -1,6 +1,6 @@
 module Poem exposing (poem, Poem)
 
-import Model exposing (GridContent(Content), GridItem, Model)
+import Model exposing (GridItem, Model)
 
 
 type alias Poem =
@@ -25,6 +25,4 @@ sortByDistanceFromOrigin =
 
 title : GridItem -> String
 title gridItem =
-    case gridItem.content of
-        Content _ _ movie _ ->
-            movie.description
+    gridItem.movie.description

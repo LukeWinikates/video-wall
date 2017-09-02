@@ -2,7 +2,7 @@ module GuideLines exposing (guideLines)
 
 import App.Grid exposing (px, snap)
 import Geometry exposing (Orientation, Scale, dimension)
-import Model exposing (GridContent(Content), GridItem, Model)
+import Model exposing (GridItem, Model)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Set
@@ -69,9 +69,7 @@ leftCenterRight item =
 
 dimensionable : GridItem -> Dimensionable
 dimensionable item =
-    case item.content of
-        Content orientation scale _ _ ->
-            { left = item.left, top = item.top, scale = scale, orientation = orientation }
+    { left = item.left, top = item.top, scale = item.scale, orientation = item.orientation }
 
 
 getHorizontals : Model -> List Int
