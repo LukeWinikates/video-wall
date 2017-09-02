@@ -41,7 +41,6 @@ import Task
 -- TODO: when switching videos, highlight the ones that aren't already onscreen
 -- TODO: add a "randomize" button
 -- TODO topic: the grid / dragging :
--- TODO: maybe make final position snap to grid when dragging / updating url
 -- TODO: when being dragged, the dragged item should have the highest z-index.
 -- TODO topic: refactoring
 -- TODO: look for duplication in styles, and find a way to make the latent structure more explicit
@@ -50,7 +49,6 @@ import Task
 -- TODO: provide preset layouts to start from?
 -- TODO: an extra option that includes videos from all the collections
 -- TODO: something that boosts z-index of last thing you touched, so that it stays on top
--- TODO: movie list often overflows the container. Display it fullscreen instead?
 -- TODO: links for changing the collection also don't have pointer style (is there a way to make the URL look right on the link, so ctrl+click works?)
 -- TODO: landing from a bare url should show you something cool -> maybe the tray menu is open
 -- TODO category: user feedback 2
@@ -67,6 +65,7 @@ import Task
 -- TODO: drop the font awesome Elm package, and use the more conventional CSS font awesome version instead
 -- TODO: move the movie picker into the sidebar
 -- TODO: fix the small z-index weirdness (hovered GridItem has higher z-index than the overlay)
+
 
 main =
     App.Routing.program UrlChange
@@ -86,11 +85,20 @@ subscriptions model =
         |> Sub.batch
 
 
+snapItem : GridItem -> GridItem
+snapItem item =
+    { item | top = item.top |> snap, left = item.left |> snap }
+
+
 wrapDrag : DragEventType -> Model -> ( Model, Cmd Msg )
 wrapDrag typ model =
     case typ of
         End ->
-            ( model, model |> App.Routing.modelToUrlCmd )
+            let
+                snappedModel =
+                    { model | movies = List.map snapItem model.movies }
+            in
+                ( snappedModel, snappedModel |> App.Routing.modelToUrlCmd )
 
         _ ->
             ( model, Cmd.none )
