@@ -13,7 +13,7 @@ import Dom.BackgroundClicker exposing (decodePosition, onClickElementWithId)
 import Dom.Dragging as Dragging exposing (..)
 import FontAwesome
 import Geometry exposing (..)
-import GuideLines exposing (guideLines)
+import GuideLines exposing (guideLinesView)
 import Html exposing (Attribute, Html, a, b, body, div, h2, img, li, p, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, poster, property, rel, src, style)
 import Html.Events exposing (..)
@@ -68,6 +68,7 @@ import Task
 -- TODO: instead of redirecting to a fully-populated view, just show the "add a movie" button?
 -- TODO: add a "clear" button?
 -- TODO: come up with a name for the main canvas/grid of videos
+
 
 main =
     App.Routing.program UrlChange
@@ -463,12 +464,7 @@ view model =
             (List.concat
                 [ (indexedMap (gridMovieView model) model.movies)
                 , movieAdders model
-                , ((Maybe.map
-                        (always (guideLines model))
-                        model.dragging
-                   )
-                    |> Maybe.withDefault []
-                  )
+                , GuideLines.guideLinesView model
                 , [ overlayView model ]
                 , [ Tray.menuView model ]
                 ]

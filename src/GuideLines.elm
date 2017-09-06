@@ -1,16 +1,16 @@
-module GuideLines exposing (guideLines)
+module GuideLines exposing (guideLinesView)
 
 import App.Grid exposing (px, snap)
+import Dom.Dragging
 import Geometry exposing (Orientation, Scale, dimension)
+import List.Extra
 import Model exposing (GridItem, Model)
 import Html exposing (Attribute, Html, a, b, body, button, div, li, text, ul, video)
 import Html.Attributes exposing (attribute, autoplay, height, href, loop, property, src, style)
 import Set
 
 
--- TODO: only show the lines that are closest to the top, bottom, or center of the current thing
 -- TODO: exclude the currently dragged thing? or maybe style it differently?
--- TODO: make the snapping more elegantly done
 
 
 type alias Dimensionable =
@@ -38,6 +38,7 @@ verticalLineView x =
             , ( "border-left", "1px dashed black" )
             , ( "height", "100vh" )
             , ( "left", x |> px )
+            , ( "top", "0" )
             ]
         ]
         []
@@ -72,36 +73,57 @@ dimensionable item =
     { left = item.left, top = item.top, scale = item.scale, orientation = item.orientation }
 
 
-getHorizontals : Model -> List Int
-getHorizontals model =
+getHorizontals : Model -> GridItem -> List Int
+getHorizontals model item =
     model.movies
         |> List.map dimensionable
         |> List.map topCenterBottom
         |> List.concat
         |> Set.fromList
         |> Set.toList
+        |> List.sortBy (nearestDistance <| topCenterBottom <| dimensionable item)
+        |> List.take 9
 
 
-getVerticals : Model -> List Int
-getVerticals model =
+getVerticals : Model -> GridItem -> List Int
+getVerticals model item =
     model.movies
         |> List.map dimensionable
         |> List.map leftCenterRight
         |> List.concat
         |> Set.fromList
         |> Set.toList
+        |> List.sortBy (nearestDistance <| leftCenterRight <| dimensionable item)
+        |> List.take 9
 
 
-horizontals : Model -> List (Html msg)
-horizontals model =
-    List.map horizontalLineView (getHorizontals model)
+nearestDistance : List Int -> Int -> Int
+nearestDistance items pos =
+    items
+        |> List.map ((((-) pos) >> abs))
+        |> List.minimum
+        |> Maybe.withDefault 0
 
 
-verticals : Model -> List (Html msg)
-verticals model =
-    List.map verticalLineView (getVerticals model)
+horizontals : Model -> GridItem -> List (Html msg)
+horizontals model item =
+    List.map horizontalLineView (getHorizontals model item)
 
 
-guideLines : Model -> List (Html msg)
-guideLines model =
-    List.append (verticals model) (horizontals model)
+verticals : Model -> GridItem -> List (Html msg)
+verticals model item =
+    List.map verticalLineView (getVerticals model item)
+
+
+guideLines : Model -> GridItem -> List (Html msg)
+guideLines model item =
+    (verticals model item)
+        ++ (horizontals model item)
+
+
+guideLinesView : Model -> List (Html msg)
+guideLinesView model =
+    model.dragging
+        |> Maybe.andThen (\{ state } -> (List.Extra.getAt state model.movies))
+        |> Maybe.map (\item -> guideLines model item)
+        |> Maybe.withDefault []
